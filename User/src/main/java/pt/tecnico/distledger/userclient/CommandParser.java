@@ -32,32 +32,14 @@ public class CommandParser {
 
             try{
                 switch (cmd) {
-                    case CREATE_ACCOUNT:
-                        this.createAccount(line);
-                        break;
-
-                    case DELETE_ACCOUNT:
-                        this.deleteAccount(line);
-                        break;
-
-                    case TRANSFER_TO:
-                        this.transferTo(line);
-                        break;
-
-                    case BALANCE:
-                        this.balance(line);
-                        break;
-
-                    case HELP:
-                        this.printUsage();
-                        break;
-
-                    case EXIT:
-                        exit = true;
-                        break;
-
-                    default:
-                        break;
+                    case CREATE_ACCOUNT -> this.createAccount(line);
+                    case DELETE_ACCOUNT -> this.deleteAccount(line);
+                    case TRANSFER_TO -> this.transferTo(line);
+                    case BALANCE -> this.balance(line);
+                    case HELP -> this.printUsage();
+                    case EXIT -> exit = true;
+                    default -> {
+                    }
                 }
             }
             catch (Exception e){
@@ -76,8 +58,7 @@ public class CommandParser {
 
         String server = split[1];
         String username = split[2];
-
-        System.out.println("TODO: implement createAccount command");
+        System.out.println(userService.createAccountService(username));
     }
 
     private void deleteAccount(String line){

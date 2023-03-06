@@ -2,6 +2,7 @@ package pt.tecnico.distledger.userclient.grpc;
 
 import io.grpc.ManagedChannel;
 import io.grpc.ManagedChannelBuilder;
+import pt.ulisboa.tecnico.distledger.contract.user.UserDistLedger;
 import pt.ulisboa.tecnico.distledger.contract.user.UserServiceGrpc;
 
 public class UserService {
@@ -10,30 +11,31 @@ public class UserService {
         This should include a method that builds a channel and stub,
         as well as individual methods for each remote operation of this service. */
 
-    private String target;
+    private final UserServiceGrpc.UserServiceBlockingStub stub;
 
     public UserService(String target) {
-        this.target = target;
+
+        // Channel is the abstraction to connect to a service endpoint.
+        // Let us use plaintext communication because we do not have certificates.
+        final ManagedChannel channel = ManagedChannelBuilder.forTarget(target).usePlaintext().build();
+
+        // It is up to the client to determine whether to block the call.
+        // Here we create a blocking stub, but an async stub,
+        // or an async stub with Future are always possible.
+        stub = UserServiceGrpc.newBlockingStub(channel);
+
+        // A Channel should be shutdown before stopping the process.
+        channel.shutdownNow();
     }
 
-    public String getTarget() {
-        return target;
+    public UserServiceGrpc.UserServiceBlockingStub getStub() {
+        return stub;
     }
 
-    public void setTarget(String target) {
-        this.target = target;
+    public String createAccountService(String username) {
+        UserDistLedger.CreateAccountRequest request = UserDistLedger.CreateAccountRequest.newBuilder().setUserId(username).build();
+        UserDistLedger.CreateAccountResponse response = stub.createAccount(request);
+        return "OK"; // TODO try catch when errors are implemented
     }
-
-    // Channel is the abstraction to connect to a service endpoint.
-    // Let us use plaintext communication because we do not have certificates.
-    final ManagedChannel channel = ManagedChannelBuilder.forAddress("localhost", 2001).usePlaintext().build();
-
-    // It is up to the client to determine whether to block the call.
-    // Here we create a blocking stub, but an async stub,
-    // or an async stub with Future are always possible.
-    UserServiceGrpc.UserServiceBlockingStub stub = UserServiceGrpc.newBlockingStub(channel);
-
-
-    // A Channel should be shutdown before stopping the process.
-    // channel.shutdownNow();
+    // TODO implement all functions of command parser of user
 }
