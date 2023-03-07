@@ -38,6 +38,12 @@ public class UserService {
         return "OK"; // TODO try catch when errors are implemented
     }
 
+    public String deleteAccountService(String username) {
+        UserDistLedger.DeleteAccountRequest request = UserDistLedger.DeleteAccountRequest.newBuilder().setUserId(username).build();
+        UserDistLedger.DeleteAccountResponse response = stub.deleteAccount(request);
+        return "OK"; // TODO try catch when errors are implemented
+    }
+
     public int getBalanceService(String username) {
         UserDistLedger.BalanceRequest request = UserDistLedger.BalanceRequest.newBuilder().setUserId(username).build();
         UserDistLedger.BalanceResponse response = stub.balance(request);

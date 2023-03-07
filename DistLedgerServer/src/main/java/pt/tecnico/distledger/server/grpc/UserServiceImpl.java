@@ -34,7 +34,14 @@ public class UserServiceImpl extends UserServiceGrpc.UserServiceImplBase {
 
     @Override
     public void deleteAccount(UserDistLedger.DeleteAccountRequest request, StreamObserver<UserDistLedger.DeleteAccountResponse> responseObserver) {
-        super.deleteAccount(request, responseObserver);
+
+        serverState.deleteAccount(request.getUserId());
+
+        UserDistLedger.DeleteAccountResponse response = UserDistLedger.DeleteAccountResponse.newBuilder().build();
+
+        responseObserver.onNext(response);
+
+        responseObserver.onCompleted();
     }
 
     @Override

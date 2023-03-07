@@ -58,6 +58,7 @@ public class CommandParser {
 
         String server = split[1];
         String username = split[2];
+
         System.out.println(userService.createAccountService(username));
     }
 
@@ -71,7 +72,7 @@ public class CommandParser {
         String server = split[1];
         String username = split[2];
 
-        System.out.println("TODO: implement deleteAccount command");
+        System.out.println(userService.deleteAccountService(username));
     }
 
 
