@@ -55,6 +55,9 @@ public class UserServiceImpl extends UserServiceGrpc.UserServiceImplBase {
         else if (flag == -2) {
             responseObserver.onError(PERMISSION_DENIED.withDescription("Balance not zero").asRuntimeException());
         }
+        else if (flag == -3) {
+            responseObserver.onError(PERMISSION_DENIED.withDescription("Cannot delete broker account").asRuntimeException());
+        }
         else {
             UserDistLedger.DeleteAccountResponse response = UserDistLedger.DeleteAccountResponse.newBuilder().build();
 

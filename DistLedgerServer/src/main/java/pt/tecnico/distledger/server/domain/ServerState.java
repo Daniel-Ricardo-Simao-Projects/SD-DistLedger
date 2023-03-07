@@ -14,6 +14,7 @@ public class ServerState {
     public ServerState() {
         this.ledger = new ArrayList<>();
         this.accounts = new LinkedHashSet<>();
+        this.accounts.add(new UserAccount("broker", 1000));
     }
 
     /* TODO: Here should be declared all the server state attributes
@@ -32,6 +33,9 @@ public class ServerState {
     }
 
     public int deleteAccount(String userId) {
+        if (userId.equals("broker")) {
+            return -3;
+        }
         for (UserAccount userAccount : accounts) {
             if (Objects.equals(userAccount.getUserId(), userId)) {
                 if (userAccount.getBalance() == 0) {

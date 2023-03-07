@@ -10,6 +10,11 @@ public class UserAccount {
         this.userId = userId;
     }
 
+    public UserAccount(String userId, int balance) {
+        this.userId = userId;
+        this.balance = balance;
+    }
+
     public String getUserId() {
         return userId;
     }
