@@ -1,5 +1,6 @@
 package pt.tecnico.distledger.server.domain;
 
+import pt.tecnico.distledger.server.domain.operation.CreateOp;
 import pt.tecnico.distledger.server.domain.operation.Operation;
 
 import java.util.ArrayList;
@@ -14,5 +15,7 @@ public class ServerState {
 
     /* TODO: Here should be declared all the server state attributes
          as well as the methods to access and interact with the state. */
-
+    public void AddCreateOp(CreateOp createOp) {
+        ledger.add(createOp);
+    }
 }
