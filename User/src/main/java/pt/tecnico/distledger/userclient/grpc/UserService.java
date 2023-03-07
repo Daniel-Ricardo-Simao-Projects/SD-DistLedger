@@ -58,7 +58,7 @@ public class UserService {
         UserDistLedger.BalanceRequest request = UserDistLedger.BalanceRequest.newBuilder().setUserId(username).build();
         try {
             UserDistLedger.BalanceResponse response = stub.balance(request);
-            return "OK\n" + response.getValue();
+            return "OK\n" + response.toString();
         }
         catch (StatusRuntimeException e){
             return "Caught exception with description: " + e.getStatus().getDescription();

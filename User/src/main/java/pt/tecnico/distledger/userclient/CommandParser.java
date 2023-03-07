@@ -88,7 +88,7 @@ public class CommandParser {
         String server = split[1];
         String username = split[2];
 
-        System.out.println(userService.getBalanceService(username));
+        System.out.print(userService.getBalanceService(username));
     }
 
     private void transferTo(String line){
