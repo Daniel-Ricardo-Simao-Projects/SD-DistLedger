@@ -1,10 +1,11 @@
 package pt.tecnico.distledger.server.grpc;
 
 import io.grpc.stub.StreamObserver;
-import pt.tecnico.distledger.server.domain.operation.CreateOp;
 import pt.ulisboa.tecnico.distledger.contract.user.UserDistLedger;
 import pt.ulisboa.tecnico.distledger.contract.user.UserServiceGrpc;
 import pt.tecnico.distledger.server.domain.ServerState;
+
+import static io.grpc.Status.*;
 
 public class UserServiceImpl extends UserServiceGrpc.UserServiceImplBase {
 
@@ -24,13 +25,15 @@ public class UserServiceImpl extends UserServiceGrpc.UserServiceImplBase {
     @Override
     public void createAccount(UserDistLedger.CreateAccountRequest request, StreamObserver<UserDistLedger.CreateAccountResponse> responseObserver) {
 
-        serverState.createAccount(request.getUserId());
+        int flag = serverState.createAccount(request.getUserId());
 
-        UserDistLedger.CreateAccountResponse response = UserDistLedger.CreateAccountResponse.newBuilder().build();
-
-        responseObserver.onNext(response);
-
-        responseObserver.onCompleted();
+        if (flag == 1) {
+            responseObserver.onError(ALREADY_EXISTS.withDescription("Username already taken").asRuntimeException());
+        } else {
+            UserDistLedger.CreateAccountResponse response = UserDistLedger.CreateAccountResponse.newBuilder().build();
+            responseObserver.onNext(response);
+            responseObserver.onCompleted();
+        }
     }
 
     @Override

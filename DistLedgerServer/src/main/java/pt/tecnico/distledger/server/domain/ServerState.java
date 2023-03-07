@@ -18,16 +18,17 @@ public class ServerState {
 
     /* TODO: Here should be declared all the server state attributes
          as well as the methods to access and interact with the state. */
-    public void createAccount(String userId) {
-        /* for (UserAccount userAccount : accounts) {
+    public int createAccount(String userId) {
+        for (UserAccount userAccount : accounts) {
             if (Objects.equals(userAccount.getUserId(), userId)) {
-                // TODO handle exceptions
+                return 1;
             }
-        }*/
+        }
         UserAccount newUser = new UserAccount(userId);
         accounts.add(newUser);
         CreateOp createOp = new CreateOp(userId);
         ledger.add(createOp);
+        return 0;
     }
 
     public void deleteAccount(String userId) {
