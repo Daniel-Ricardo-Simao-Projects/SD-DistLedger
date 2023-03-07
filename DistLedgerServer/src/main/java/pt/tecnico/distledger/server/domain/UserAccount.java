@@ -1,12 +1,12 @@
 package pt.tecnico.distledger.server.domain;
 
-public class UserData {
+public class UserAccount {
 
     private String userId;
 
     private int balance = 0;
 
-    public UserData(String userId) {
+    public UserAccount(String userId) {
         this.userId = userId;
     }
 
@@ -28,7 +28,7 @@ public class UserData {
 
     @Override
     public String toString() {
-        return "UserData{" +
+        return "UserAccount{" +
                 "userId='" + userId + '\'' +
                 ", balance=" + balance +
                 '}';

@@ -12,7 +12,7 @@ import java.util.Set;
 public class ServerState {
     private List<Operation> ledger;
 
-    private Set<UserData> accounts = new HashSet<UserData>();
+    private Set<UserAccount> accounts = new HashSet<UserAccount>();
 
     public ServerState() {
         this.ledger = new ArrayList<>();
@@ -25,9 +25,9 @@ public class ServerState {
     }
 
     public void deleteAccount(String userId) {
-        for (UserData userData : accounts) {
-            if (userData.getUserId() == userId) {
-                accounts.remove(userData);
+        for (UserAccount userAccount : accounts) {
+            if (userAccount.getUserId() == userId) {
+                accounts.remove(userAccount);
                 DeleteOp deleteOp = new DeleteOp(userId);
                 ledger.add(deleteOp);
             }
@@ -36,12 +36,12 @@ public class ServerState {
     }
 
     public int getBalanceById(String userId) {
-        for (UserData userData : accounts) {
-            if (userData.getUserId() == userId) {
-                return userData.getBalance();
+        for (UserAccount userAccount : accounts) {
+            if (userAccount.getUserId() == userId) {
+                return userAccount.getBalance();
             }
         }
-        // If we didn't find a UserData object with the given userId, return a default value or throw an exception.
+        // If we didn't find a UserAccount object with the given userId, return a default value or throw an exception.
         return 0;
     }
 }
