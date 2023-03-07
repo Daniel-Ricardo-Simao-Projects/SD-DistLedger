@@ -46,6 +46,9 @@ public class CommandParser {
                 System.err.println(e.getMessage());
             }
         }
+        
+        userService.closeChannel();
+
     }
 
     private void createAccount(String line){
