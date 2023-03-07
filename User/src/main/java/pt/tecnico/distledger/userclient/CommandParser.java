@@ -46,9 +46,8 @@ public class CommandParser {
                 System.err.println(e.getMessage());
             }
         }
-        
-        userService.closeChannel();
 
+        userService.closeChannel();
     }
 
     private void createAccount(String line){
@@ -89,10 +88,7 @@ public class CommandParser {
         String server = split[1];
         String username = split[2];
 
-        int balance = userService.getBalanceService(username);
-        if(balance == 0) System.out.println("User does not exist");
-        else System.out.println("OK\n" + balance);
-
+        System.out.println(userService.getBalanceService(username));
     }
 
     private void transferTo(String line){

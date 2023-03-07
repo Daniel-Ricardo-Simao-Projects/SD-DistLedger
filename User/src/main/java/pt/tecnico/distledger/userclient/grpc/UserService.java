@@ -5,6 +5,7 @@ import io.grpc.ManagedChannel;
 import io.grpc.ManagedChannelBuilder;
 import pt.ulisboa.tecnico.distledger.contract.user.UserDistLedger;
 import pt.ulisboa.tecnico.distledger.contract.user.UserServiceGrpc;
+import io.grpc.StatusRuntimeException;
 
 
 public class UserService {
@@ -43,10 +44,15 @@ public class UserService {
         return "OK"; // TODO try catch when errors are implemented
     }
 
-    public int getBalanceService(String username) {
+    public String getBalanceService(String username) {
         UserDistLedger.BalanceRequest request = UserDistLedger.BalanceRequest.newBuilder().setUserId(username).build();
-        UserDistLedger.BalanceResponse response = stub.balance(request);
-        return response.getValue();
+        try {
+            UserDistLedger.BalanceResponse response = stub.balance(request);
+            return "OK\n" + response.getValue();
+        }
+        catch (StatusRuntimeException e){
+            return "Caught exception with description: " + e.getStatus().getDescription();
+        }
     }
     // TODO implement all functions of command parser of user
 }

@@ -48,6 +48,6 @@ public class ServerState {
             }
         }
         // If we didn't find a UserAccount object with the given userId, return a default value or throw an exception.
-        return 0;
+        return -1;
     }
 }

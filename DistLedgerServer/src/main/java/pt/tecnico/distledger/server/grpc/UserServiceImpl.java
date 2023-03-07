@@ -5,6 +5,7 @@ import pt.tecnico.distledger.server.domain.operation.CreateOp;
 import pt.ulisboa.tecnico.distledger.contract.user.UserDistLedger;
 import pt.ulisboa.tecnico.distledger.contract.user.UserServiceGrpc;
 import pt.tecnico.distledger.server.domain.ServerState;
+import static io.grpc.Status.NOT_FOUND;
 
 public class UserServiceImpl extends UserServiceGrpc.UserServiceImplBase {
 
@@ -13,12 +14,19 @@ public class UserServiceImpl extends UserServiceGrpc.UserServiceImplBase {
     @Override
     public void balance(UserDistLedger.BalanceRequest request, StreamObserver<UserDistLedger.BalanceResponse> responseObserver) {
 
-        UserDistLedger.BalanceResponse response = UserDistLedger.BalanceResponse.newBuilder().
-                setValue(serverState.getBalanceById(request.getUserId())).build();
+        int value = serverState.getBalanceById(request.getUserId());
 
-        responseObserver.onNext(response);
+        if(value == -1) {
+            responseObserver.onError(NOT_FOUND.withDescription("User not found").asRuntimeException());
+        }
+        else {
+            UserDistLedger.BalanceResponse response = UserDistLedger.BalanceResponse.newBuilder().
+                    setValue(value).build();
 
-        responseObserver.onCompleted();
+            responseObserver.onNext(response);
+
+            responseObserver.onCompleted();
+        }
     }
 
     @Override
