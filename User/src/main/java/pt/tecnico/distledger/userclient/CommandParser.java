@@ -85,7 +85,10 @@ public class CommandParser {
         String server = split[1];
         String username = split[2];
 
-        System.out.println("TODO: implement balance command");
+        int balance = userService.getBalanceService(username);
+        if(balance == 0) System.out.println("User does not exist");
+        else System.out.println("OK\n" + balance);
+
     }
 
     private void transferTo(String line){

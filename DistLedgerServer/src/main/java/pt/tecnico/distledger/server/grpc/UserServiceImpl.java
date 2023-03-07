@@ -4,11 +4,21 @@ import io.grpc.stub.StreamObserver;
 import pt.tecnico.distledger.server.domain.operation.CreateOp;
 import pt.ulisboa.tecnico.distledger.contract.user.UserDistLedger;
 import pt.ulisboa.tecnico.distledger.contract.user.UserServiceGrpc;
+import pt.tecnico.distledger.server.domain.ServerState;
 
 public class UserServiceImpl extends UserServiceGrpc.UserServiceImplBase {
+
+    ServerState serverState = new ServerState();
+
     @Override
     public void balance(UserDistLedger.BalanceRequest request, StreamObserver<UserDistLedger.BalanceResponse> responseObserver) {
-        super.balance(request, responseObserver);
+
+        UserDistLedger.BalanceResponse response = UserDistLedger.BalanceResponse.newBuilder().
+                setValue(serverState.getBalanceById(request.getUserId())).build();
+
+        responseObserver.onNext(response);
+
+        responseObserver.onCompleted();
     }
 
     @Override

@@ -37,5 +37,11 @@ public class UserService {
         UserDistLedger.CreateAccountResponse response = stub.createAccount(request);
         return "OK"; // TODO try catch when errors are implemented
     }
+
+    public int getBalanceService(String username) {
+        UserDistLedger.BalanceRequest request = UserDistLedger.BalanceRequest.newBuilder().setUserId(username).build();
+        UserDistLedger.BalanceResponse response = stub.balance(request);
+        return response.getValue();
+    }
     // TODO implement all functions of command parser of user
 }
