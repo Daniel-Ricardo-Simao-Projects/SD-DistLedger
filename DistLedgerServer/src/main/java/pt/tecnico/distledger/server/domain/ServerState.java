@@ -31,15 +31,19 @@ public class ServerState {
         return 0;
     }
 
-    public void deleteAccount(String userId) {
+    public int deleteAccount(String userId) {
         for (UserAccount userAccount : accounts) {
             if (Objects.equals(userAccount.getUserId(), userId)) {
-                accounts.remove(userAccount);
-                DeleteOp deleteOp = new DeleteOp(userId);
-                ledger.add(deleteOp);
+                if (userAccount.getBalance() == 0) {
+                    accounts.remove(userAccount);
+                    DeleteOp deleteOp = new DeleteOp(userId);
+                    ledger.add(deleteOp);
+                    return 0;
+                }
+                return -2;
             }
         }
-        // Handle exceptions
+        return -1;
     }
 
     public int getBalanceById(String userId) {

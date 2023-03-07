@@ -45,9 +45,13 @@ public class UserService {
     }
 
     public String deleteAccountService(String username) {
-        UserDistLedger.DeleteAccountRequest request = UserDistLedger.DeleteAccountRequest.newBuilder().setUserId(username).build();
-        UserDistLedger.DeleteAccountResponse response = stub.deleteAccount(request);
-        return "OK"; // TODO try catch when errors are implemented
+        try {
+            UserDistLedger.DeleteAccountRequest request = UserDistLedger.DeleteAccountRequest.newBuilder().setUserId(username).build();
+            UserDistLedger.DeleteAccountResponse response = stub.deleteAccount(request);
+        } catch (StatusRuntimeException e) {
+            return "Caught exception with description: " + e.getStatus().getDescription();
+        }
+        return "OK";
     }
 
     public String getBalanceService(String username) {
@@ -60,5 +64,5 @@ public class UserService {
             return "Caught exception with description: " + e.getStatus().getDescription();
         }
     }
-    // TODO implement all functions of command parser of user
+    // TODO implement transferTo command parser of user
 }

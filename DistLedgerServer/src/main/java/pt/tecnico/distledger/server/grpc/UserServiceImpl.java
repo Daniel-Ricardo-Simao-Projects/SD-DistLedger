@@ -47,13 +47,21 @@ public class UserServiceImpl extends UserServiceGrpc.UserServiceImplBase {
     @Override
     public void deleteAccount(UserDistLedger.DeleteAccountRequest request, StreamObserver<UserDistLedger.DeleteAccountResponse> responseObserver) {
 
-        serverState.deleteAccount(request.getUserId());
+        int flag = serverState.deleteAccount(request.getUserId());
 
-        UserDistLedger.DeleteAccountResponse response = UserDistLedger.DeleteAccountResponse.newBuilder().build();
+        if (flag == -1) {
+            responseObserver.onError(NOT_FOUND.withDescription("User not found").asRuntimeException());
+        }
+        else if (flag == -2) {
+            responseObserver.onError(PERMISSION_DENIED.withDescription("Balance not zero").asRuntimeException());
+        }
+        else {
+            UserDistLedger.DeleteAccountResponse response = UserDistLedger.DeleteAccountResponse.newBuilder().build();
 
-        responseObserver.onNext(response);
+            responseObserver.onNext(response);
 
-        responseObserver.onCompleted();
+            responseObserver.onCompleted();
+        }
     }
 
     @Override
