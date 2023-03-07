@@ -33,13 +33,10 @@ public class ServerMain {
         final BindableService adminImpl = new AdminServiceImpl();
 
         // Create a new server to listen on port TODO add all serviceImpl here
-        Server server = ServerBuilder.forPort(port).addService(userImpl).addService(adminImpl).build();
+        Server server = ServerBuilder.forPort(port).addService(userImpl).build();
 
         // Start the server
         server.start();
-
-        // TODO verify if this is correct
-        ServerState serverState = new ServerState();
 
         // Server threads are running in the background.
         System.out.println("Server started");
