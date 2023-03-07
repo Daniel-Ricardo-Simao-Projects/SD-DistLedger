@@ -24,11 +24,12 @@ public class UserServiceImpl extends UserServiceGrpc.UserServiceImplBase {
     @Override
     public void createAccount(UserDistLedger.CreateAccountRequest request, StreamObserver<UserDistLedger.CreateAccountResponse> responseObserver) {
 
+        serverState.createAccount(request.getUserId());
+
         UserDistLedger.CreateAccountResponse response = UserDistLedger.CreateAccountResponse.newBuilder().build();
 
-        // Send a single response through the stream.
         responseObserver.onNext(response);
-        // Notify the client that the operation has been completed.
+
         responseObserver.onCompleted();
     }
 
