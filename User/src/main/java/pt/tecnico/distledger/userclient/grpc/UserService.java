@@ -3,6 +3,7 @@ package pt.tecnico.distledger.userclient.grpc;
 import io.grpc.ConnectivityState;
 import io.grpc.ManagedChannel;
 import io.grpc.ManagedChannelBuilder;
+import io.grpc.StatusRuntimeException;
 import pt.ulisboa.tecnico.distledger.contract.user.UserDistLedger;
 import pt.ulisboa.tecnico.distledger.contract.user.UserServiceGrpc;
 import io.grpc.StatusRuntimeException;
@@ -33,9 +34,14 @@ public class UserService {
     }
 
     public String createAccountService(String username) {
-        UserDistLedger.CreateAccountRequest request = UserDistLedger.CreateAccountRequest.newBuilder().setUserId(username).build();
-        UserDistLedger.CreateAccountResponse response = stub.createAccount(request);
-        return "OK"; // TODO try catch when errors are implemented
+        try {
+            UserDistLedger.CreateAccountRequest request = UserDistLedger.CreateAccountRequest.newBuilder().setUserId(username).build();
+            UserDistLedger.CreateAccountResponse response = stub.createAccount(request);
+        } catch (StatusRuntimeException e) {
+            return "Caught exception with description: " +
+                    e.getStatus().getDescription();
+        }
+        return "OK";
     }
 
     public String deleteAccountService(String username) {
