@@ -35,21 +35,21 @@ public class UserService {
         try {
             UserDistLedger.CreateAccountRequest request = UserDistLedger.CreateAccountRequest.newBuilder().setUserId(username).build();
             UserDistLedger.CreateAccountResponse response = stub.createAccount(request);
+            return "OK" + response.toString();
         } catch (StatusRuntimeException e) {
             return "Caught exception with description: " +
                     e.getStatus().getDescription();
         }
-        return "OK";
     }
 
     public String deleteAccountService(String username) {
         try {
             UserDistLedger.DeleteAccountRequest request = UserDistLedger.DeleteAccountRequest.newBuilder().setUserId(username).build();
             UserDistLedger.DeleteAccountResponse response = stub.deleteAccount(request);
+            return "OK" + response.toString();
         } catch (StatusRuntimeException e) {
             return "Caught exception with description: " + e.getStatus().getDescription();
         }
-        return "OK";
     }
 
     public String getBalanceService(String username) {

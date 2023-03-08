@@ -18,8 +18,6 @@ public class ServerState {
         this.accounts.add(new UserAccount("broker", 1000));
     }
 
-    /* TODO: Here should be declared all the server state attributes
-         as well as the methods to access and interact with the state. */
     public int createAccount(String userId) {
         for (UserAccount userAccount : accounts) {
             if (Objects.equals(userAccount.getUserId(), userId)) {
@@ -51,26 +49,6 @@ public class ServerState {
         return -1;
     }
 
-    public int transferTo(String fromAccount, String destAccount, int amount) {
-
-        UserAccount sender = getUserAccount(fromAccount);
-        UserAccount receiver = getUserAccount(destAccount);
-
-        if (sender == null)
-            return 1;
-        if (receiver == null)
-            return 2;
-
-        if (sender.getBalance() < amount)
-            return 3;
-
-        sender.setBalance(sender.getBalance() - amount);
-        receiver.setBalance(receiver.getBalance() + amount);
-
-        return 0;
-
-    }
-
     public int getBalanceById(String userId) {
         for (UserAccount userData : accounts) {
             if (Objects.equals(userData.getUserId(), userId)) {
@@ -79,6 +57,28 @@ public class ServerState {
         }
         // If we didn't find a UserAccount object with the given userId, return a default value or throw an exception.
         return -1;
+    }
+
+    public int transferTo(String fromAccount, String destAccount, int amount) {
+
+        UserAccount sender = getUserAccount(fromAccount);
+        UserAccount receiver = getUserAccount(destAccount);
+
+        if (sender == null)
+            return -1;
+        if (receiver == null)
+            return -2;
+        if (amount < 0)
+            return -3;
+
+        if (sender.getBalance() < amount)
+            return -4;
+
+        sender.setBalance(sender.getBalance() - amount);
+        receiver.setBalance(receiver.getBalance() + amount);
+
+        return 0;
+
     }
 
     public UserAccount getUserAccount(String userId) {
