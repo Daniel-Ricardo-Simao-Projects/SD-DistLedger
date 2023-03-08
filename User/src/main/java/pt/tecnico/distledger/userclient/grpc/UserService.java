@@ -1,12 +1,10 @@
 package pt.tecnico.distledger.userclient.grpc;
 
-import io.grpc.ConnectivityState;
 import io.grpc.ManagedChannel;
 import io.grpc.ManagedChannelBuilder;
 import io.grpc.StatusRuntimeException;
 import pt.ulisboa.tecnico.distledger.contract.user.UserDistLedger;
 import pt.ulisboa.tecnico.distledger.contract.user.UserServiceGrpc;
-import io.grpc.StatusRuntimeException;
 
 
 public class UserService {
@@ -20,7 +18,7 @@ public class UserService {
 
     public UserService(String target) {
 
-        channel = ManagedChannelBuilder.forTarget("localhost:2001").usePlaintext().build();
+        channel = ManagedChannelBuilder.forTarget(target).usePlaintext().build();
 
         stub = UserServiceGrpc.newBlockingStub(channel);
     }
@@ -64,5 +62,16 @@ public class UserService {
             return "Caught exception with description: " + e.getStatus().getDescription();
         }
     }
-    // TODO implement transferTo command parser of user
+
+    public String transferToService(String fromUsername, String toUsername, Integer amount) {
+        UserDistLedger.TransferToRequest request = UserDistLedger.TransferToRequest.newBuilder()
+                .setAccountFrom(fromUsername).setAccountTo(toUsername).setAmount(amount).build();
+        try {
+            UserDistLedger.TransferToResponse response = stub.transferTo(request);
+            return "OK" + response.toString();
+        }
+        catch (StatusRuntimeException e) {
+            return "Caught exception with description: " + e.getStatus().getDescription();
+        }
+    }
 }

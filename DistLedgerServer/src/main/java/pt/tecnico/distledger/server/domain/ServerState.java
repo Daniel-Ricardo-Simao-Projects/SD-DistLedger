@@ -4,6 +4,7 @@ import pt.tecnico.distledger.server.domain.operation.CreateOp;
 import pt.tecnico.distledger.server.domain.operation.DeleteOp;
 import pt.tecnico.distledger.server.domain.operation.Operation;
 
+import java.lang.invoke.LambdaMetafactory;
 import java.util.*;
 
 public class ServerState {
@@ -50,6 +51,26 @@ public class ServerState {
         return -1;
     }
 
+    public int transferTo(String fromAccount, String destAccount, int amount) {
+
+        UserAccount sender = getUserAccount(fromAccount);
+        UserAccount receiver = getUserAccount(destAccount);
+
+        if (sender == null)
+            return 1;
+        if (receiver == null)
+            return 2;
+
+        if (sender.getBalance() < amount)
+            return 3;
+
+        sender.setBalance(sender.getBalance() - amount);
+        receiver.setBalance(receiver.getBalance() + amount);
+
+        return 0;
+
+    }
+
     public int getBalanceById(String userId) {
         for (UserAccount userData : accounts) {
             if (Objects.equals(userData.getUserId(), userId)) {
@@ -58,5 +79,14 @@ public class ServerState {
         }
         // If we didn't find a UserAccount object with the given userId, return a default value or throw an exception.
         return -1;
+    }
+
+    public UserAccount getUserAccount(String userId) {
+        for (UserAccount userAccount : accounts) {
+            if (Objects.equals(userAccount.getUserId(), userId)) {
+                return userAccount;
+            }
+        }
+        return null;
     }
 }

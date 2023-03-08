@@ -49,26 +49,33 @@ public class UserServiceImpl extends UserServiceGrpc.UserServiceImplBase {
 
         int flag = serverState.deleteAccount(request.getUserId());
 
-        if (flag == -1) {
-            responseObserver.onError(NOT_FOUND.withDescription("User not found").asRuntimeException());
-        }
-        else if (flag == -2) {
-            responseObserver.onError(PERMISSION_DENIED.withDescription("Balance not zero").asRuntimeException());
-        }
-        else if (flag == -3) {
-            responseObserver.onError(PERMISSION_DENIED.withDescription("Cannot delete broker account").asRuntimeException());
-        }
-        else {
-            UserDistLedger.DeleteAccountResponse response = UserDistLedger.DeleteAccountResponse.newBuilder().build();
-
-            responseObserver.onNext(response);
-
-            responseObserver.onCompleted();
+        switch (flag) {
+            case -1 -> responseObserver.onError(NOT_FOUND.withDescription("User not found").asRuntimeException());
+            case -2 ->
+                    responseObserver.onError(PERMISSION_DENIED.withDescription("Balance not zero").asRuntimeException());
+            case -3 ->
+                    responseObserver.onError(PERMISSION_DENIED.withDescription("Cannot delete broker account").asRuntimeException());
+            default -> {
+                UserDistLedger.DeleteAccountResponse response = UserDistLedger.DeleteAccountResponse.newBuilder().build();
+                responseObserver.onNext(response);
+                responseObserver.onCompleted();
+            }
         }
     }
 
     @Override
     public void transferTo(UserDistLedger.TransferToRequest request, StreamObserver<UserDistLedger.TransferToResponse> responseObserver) {
-        super.transferTo(request, responseObserver);
+        int flag = serverState.transferTo(request.getAccountFrom(), request.getAccountTo(), request.getAmount());
+
+        switch (flag) {
+            case 1 -> responseObserver.onError(NOT_FOUND.withDescription("AccountFrom not found").asRuntimeException());
+            case 2 -> responseObserver.onError(NOT_FOUND.withDescription("AccountTo not found").asRuntimeException());
+            case 3 -> responseObserver.onError(PERMISSION_DENIED.withDescription("Balance lower than amount to send").asRuntimeException());
+            default -> {
+                UserDistLedger.TransferToResponse response = UserDistLedger.TransferToResponse.newBuilder().build();
+                responseObserver.onNext(response);
+                responseObserver.onCompleted();
+            }
+        }
     }
 }

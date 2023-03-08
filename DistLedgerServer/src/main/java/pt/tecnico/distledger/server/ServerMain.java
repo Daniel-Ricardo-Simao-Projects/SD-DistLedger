@@ -33,7 +33,7 @@ public class ServerMain {
         final BindableService adminImpl = new AdminServiceImpl();
 
         // Create a new server to listen on port TODO add all serviceImpl here
-        Server server = ServerBuilder.forPort(port).addService(userImpl).build();
+        Server server = ServerBuilder.forPort(port).addService(userImpl).addService(adminImpl).build();
 
         // Start the server
         server.start();

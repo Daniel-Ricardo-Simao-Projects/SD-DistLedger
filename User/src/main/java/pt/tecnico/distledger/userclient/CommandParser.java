@@ -103,7 +103,7 @@ public class CommandParser {
         String dest = split[3];
         Integer amount = Integer.valueOf(split[4]);
 
-        System.out.println("TODO: implement transferTo command");
+        System.out.println(userService.transferToService(from, dest, amount));
     }
 
     private void printUsage() {
