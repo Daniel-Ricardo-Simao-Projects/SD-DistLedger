@@ -4,12 +4,38 @@ import io.grpc.stub.StreamObserver;
 import pt.ulisboa.tecnico.distledger.contract.user.UserDistLedger;
 import pt.ulisboa.tecnico.distledger.contract.user.UserServiceGrpc;
 import pt.tecnico.distledger.server.domain.ServerState;
+import static io.grpc.Status.NOT_FOUND;
 
 import static io.grpc.Status.*;
 
 public class UserServiceImpl extends UserServiceGrpc.UserServiceImplBase {
 
-    ServerState serverState = new ServerState();
+    private ServerState serverState;
+
+    public UserServiceImpl(ServerState serverState) {
+        this.serverState = serverState;
+    }
+
+    @Override
+    public void balance(UserDistLedger.BalanceRequest request, StreamObserver<UserDistLedger.BalanceResponse> responseObserver) {
+
+        int value = serverState.getBalanceById(request.getUserId());
+
+        if(value == -1) {
+            responseObserver.onError(NOT_FOUND.withDescription("User not found").asRuntimeException());
+        }
+        else if(value == -4) {
+            responseObserver.onError(UNAVAILABLE.withDescription("The service is currently down").asRuntimeException());
+        }
+        else {
+            UserDistLedger.BalanceResponse response = UserDistLedger.BalanceResponse.newBuilder().
+                    setValue(value).build();
+
+            responseObserver.onNext(response);
+
+            responseObserver.onCompleted();
+        }
+    }
 
     @Override
     public void createAccount(UserDistLedger.CreateAccountRequest request, StreamObserver<UserDistLedger.CreateAccountResponse> responseObserver) {
@@ -18,7 +44,12 @@ public class UserServiceImpl extends UserServiceGrpc.UserServiceImplBase {
 
         if (flag == 1) {
             responseObserver.onError(ALREADY_EXISTS.withDescription("Username already taken").asRuntimeException());
-        } else {
+
+        }
+        else if(flag == -4) {
+            responseObserver.onError(UNAVAILABLE.withDescription("The service is currently down").asRuntimeException());
+        }
+        else {
             UserDistLedger.CreateAccountResponse response = UserDistLedger.CreateAccountResponse.newBuilder().build();
             responseObserver.onNext(response);
             responseObserver.onCompleted();
@@ -34,28 +65,12 @@ public class UserServiceImpl extends UserServiceGrpc.UserServiceImplBase {
             case -1 -> responseObserver.onError(NOT_FOUND.withDescription("User not found").asRuntimeException());
             case -2 -> responseObserver.onError(PERMISSION_DENIED.withDescription("Balance not zero").asRuntimeException());
             case -3 -> responseObserver.onError(PERMISSION_DENIED.withDescription("Cannot delete broker account").asRuntimeException());
+            case -4 -> responseObserver.onError(UNAVAILABLE.withDescription("The service is currently down").asRuntimeException());
             default -> {
                 UserDistLedger.DeleteAccountResponse response = UserDistLedger.DeleteAccountResponse.newBuilder().build();
                 responseObserver.onNext(response);
                 responseObserver.onCompleted();
             }
-        }
-    }
-
-    @Override
-    public void balance(UserDistLedger.BalanceRequest request, StreamObserver<UserDistLedger.BalanceResponse> responseObserver) {
-
-        int value = serverState.getBalanceById(request.getUserId());
-
-        if(value == -1) {
-            responseObserver.onError(NOT_FOUND.withDescription("User not found").asRuntimeException());
-        }
-        else {
-            UserDistLedger.BalanceResponse response = UserDistLedger.BalanceResponse.newBuilder().
-                    setValue(value).build();
-
-            responseObserver.onNext(response);
-            responseObserver.onCompleted();
         }
     }
 
@@ -69,6 +84,7 @@ public class UserServiceImpl extends UserServiceGrpc.UserServiceImplBase {
             case -2 -> responseObserver.onError(NOT_FOUND.withDescription("AccountTo not found").asRuntimeException());
             case -3 -> responseObserver.onError(INVALID_ARGUMENT.withDescription("amount has to be greater than zero").asRuntimeException());
             case -4 -> responseObserver.onError(PERMISSION_DENIED.withDescription("Balance lower than amount to send").asRuntimeException());
+            case -5 -> responseObserver.onError(UNAVAILABLE.withDescription("The service is currently down").asRuntimeException());
             default -> {
                 UserDistLedger.TransferToResponse response = UserDistLedger.TransferToResponse.newBuilder().build();
                 responseObserver.onNext(response);

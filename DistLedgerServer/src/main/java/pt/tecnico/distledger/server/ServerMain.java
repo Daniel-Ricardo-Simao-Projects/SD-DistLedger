@@ -11,7 +11,10 @@ import java.io.IOException;
 
 public class ServerMain {
 
+    //public ServerState serverState = new ServerState();
+
     public static void main(String[] args) throws IOException, InterruptedException {
+        ServerState serverState = new ServerState();
 
         System.out.println(ServerMain.class.getSimpleName());
 
@@ -29,8 +32,8 @@ public class ServerMain {
         }
 
         final int port = Integer.parseInt(args[0]);
-        final BindableService userImpl = new UserServiceImpl();
-        final BindableService adminImpl = new AdminServiceImpl();
+        final BindableService userImpl = new UserServiceImpl(serverState);
+        final BindableService adminImpl = new AdminServiceImpl(serverState);
 
         // Create a new server to listen on port TODO add all serviceImpl here
         Server server = ServerBuilder.forPort(port).addService(userImpl).addService(adminImpl).build();

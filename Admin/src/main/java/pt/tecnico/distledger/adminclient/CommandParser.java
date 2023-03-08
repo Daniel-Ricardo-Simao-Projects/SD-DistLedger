@@ -58,6 +58,9 @@ public class CommandParser {
             }
 
         }
+
+        adminService.closeChannel();
+
     }
 
     private void activate(String line){
@@ -69,7 +72,7 @@ public class CommandParser {
         }
         String server = split[1];
 
-        System.out.println("TODO: implement activate command");
+        System.out.println(adminService.activateServer());
     }
 
     private void deactivate(String line){
@@ -81,7 +84,7 @@ public class CommandParser {
         }
         String server = split[1];
 
-        System.out.println("TODO: implement deactivate command");
+        System.out.println(adminService.deactivateServer());
     }
 
     private void dump(String line){

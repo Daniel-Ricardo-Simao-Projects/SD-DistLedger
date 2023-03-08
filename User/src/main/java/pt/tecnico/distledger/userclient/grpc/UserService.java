@@ -59,7 +59,7 @@ public class UserService {
             return "OK\n" + response.toString();
         }
         catch (StatusRuntimeException e){
-            return "Caught exception with description: " + e.getStatus().getDescription();
+            return "Caught exception with description: " + e.getStatus().getDescription() + "\n";
         }
     }
 
