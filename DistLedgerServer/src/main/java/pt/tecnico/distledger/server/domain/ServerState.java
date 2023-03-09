@@ -25,7 +25,7 @@ public class ServerState {
         this.accounts.add(new UserAccount("broker", 1000));
     }
 
-    public int createAccount(String userId) {
+    public synchronized int createAccount(String userId) {
         if(status == INACTIVE) { return -4; }
 
         for (UserAccount userAccount : accounts) {
@@ -40,7 +40,7 @@ public class ServerState {
         return 0;
     }
 
-    public int deleteAccount(String userId) {
+    public synchronized int deleteAccount(String userId) {
         if(status == INACTIVE) { return -4; }
         if (userId.equals("broker")) {
             return -3;
@@ -59,7 +59,7 @@ public class ServerState {
         return -1;
     }
 
-    public int transferTo(String fromAccount, String destAccount, int amount) {
+    public synchronized int transferTo(String fromAccount, String destAccount, int amount) {
         if(status == INACTIVE) { return -5; }
 
         UserAccount sender = getUserAccount(fromAccount);
@@ -85,7 +85,7 @@ public class ServerState {
 
     }
 
-    public int getBalanceById(String userId) {
+    public synchronized int getBalanceById(String userId) {
         if(status == INACTIVE) { return -4; }
 
         for (UserAccount userData : accounts) {
@@ -97,7 +97,7 @@ public class ServerState {
         return -1;
     }
 
-    public UserAccount getUserAccount(String userId) {
+    public synchronized UserAccount getUserAccount(String userId) {
         for (UserAccount userAccount : accounts) {
             if (Objects.equals(userAccount.getUserId(), userId)) {
                 return userAccount;
