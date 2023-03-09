@@ -12,6 +12,7 @@ import java.io.IOException;
 public class ServerMain {
 
     //public ServerState serverState = new ServerState();
+    private static boolean DEBUG_FLAG = (System.getProperty("debug") != null);
 
     public static void main(String[] args) throws IOException, InterruptedException {
         ServerState serverState = new ServerState();
@@ -32,8 +33,8 @@ public class ServerMain {
         }
 
         final int port = Integer.parseInt(args[0]);
-        final BindableService userImpl = new UserServiceImpl(serverState);
-        final BindableService adminImpl = new AdminServiceImpl(serverState);
+        final BindableService userImpl = new UserServiceImpl(serverState, DEBUG_FLAG);
+        final BindableService adminImpl = new AdminServiceImpl(serverState, DEBUG_FLAG);
 
         // Create a new server to listen on port TODO add all serviceImpl here
         Server server = ServerBuilder.forPort(port).addService(userImpl).addService(adminImpl).build();
