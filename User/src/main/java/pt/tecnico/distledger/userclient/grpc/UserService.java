@@ -35,10 +35,11 @@ public class UserService {
         try {
             UserDistLedger.CreateAccountRequest request = UserDistLedger.CreateAccountRequest.newBuilder().setUserId(username).build();
             UserDistLedger.CreateAccountResponse response = stub.createAccount(request);
-            return "OK" + response.toString();
+            return "OK" + response.toString() + "\n";
         } catch (StatusRuntimeException e) {
-            return "Caught exception with description: " +
-                    e.getStatus().getDescription();
+            if(e.getStatus().getDescription().equals("UNAVAILABLE"))
+                return e.getStatus().getDescription() + "\n";
+            else return "Caught exception with description: " + e.getStatus().getDescription() + "\n";
         }
     }
 
@@ -46,9 +47,11 @@ public class UserService {
         try {
             UserDistLedger.DeleteAccountRequest request = UserDistLedger.DeleteAccountRequest.newBuilder().setUserId(username).build();
             UserDistLedger.DeleteAccountResponse response = stub.deleteAccount(request);
-            return "OK" + response.toString();
+            return "OK" + response.toString() + "\n";
         } catch (StatusRuntimeException e) {
-            return "Caught exception with description: " + e.getStatus().getDescription();
+            if(e.getStatus().getDescription().equals("UNAVAILABLE"))
+                return e.getStatus().getDescription() + "\n";
+            else return "Caught exception with description: " + e.getStatus().getDescription() + "\n";
         }
     }
 
@@ -59,7 +62,9 @@ public class UserService {
             return "OK\n" + response.toString();
         }
         catch (StatusRuntimeException e){
-            return "Caught exception with description: " + e.getStatus().getDescription() + "\n";
+            if(e.getStatus().getDescription().equals("UNAVAILABLE"))
+                return e.getStatus().getDescription() + "\n";
+            else return "Caught exception with description: " + e.getStatus().getDescription() + "\n";
         }
     }
 
@@ -68,10 +73,12 @@ public class UserService {
                 .setAccountFrom(fromUsername).setAccountTo(toUsername).setAmount(amount).build();
         try {
             UserDistLedger.TransferToResponse response = stub.transferTo(request);
-            return "OK" + response.toString();
+            return "OK" + response.toString() + "\n";
         }
         catch (StatusRuntimeException e) {
-            return "Caught exception with description: " + e.getStatus().getDescription();
+            if(e.getStatus().getDescription().equals("UNAVAILABLE"))
+                return e.getStatus().getDescription() + "\n";
+            else return "Caught exception with description: " + e.getStatus().getDescription() + "\n";
         }
     }
 }

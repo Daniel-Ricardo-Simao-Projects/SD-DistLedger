@@ -25,7 +25,7 @@ public class UserServiceImpl extends UserServiceGrpc.UserServiceImplBase {
             responseObserver.onError(NOT_FOUND.withDescription("User not found").asRuntimeException());
         }
         else if(value == -4) {
-            responseObserver.onError(UNAVAILABLE.withDescription("The service is currently down").asRuntimeException());
+            responseObserver.onError(UNAVAILABLE.withDescription("UNAVAILABLE").asRuntimeException());
         }
         else {
             UserDistLedger.BalanceResponse response = UserDistLedger.BalanceResponse.newBuilder().
@@ -47,7 +47,7 @@ public class UserServiceImpl extends UserServiceGrpc.UserServiceImplBase {
 
         }
         else if(flag == -4) {
-            responseObserver.onError(UNAVAILABLE.withDescription("The service is currently down").asRuntimeException());
+            responseObserver.onError(UNAVAILABLE.withDescription("UNAVAILABLE").asRuntimeException());
         }
         else {
             UserDistLedger.CreateAccountResponse response = UserDistLedger.CreateAccountResponse.newBuilder().build();
@@ -65,7 +65,7 @@ public class UserServiceImpl extends UserServiceGrpc.UserServiceImplBase {
             case -1 -> responseObserver.onError(NOT_FOUND.withDescription("User not found").asRuntimeException());
             case -2 -> responseObserver.onError(PERMISSION_DENIED.withDescription("Balance not zero").asRuntimeException());
             case -3 -> responseObserver.onError(PERMISSION_DENIED.withDescription("Cannot delete broker account").asRuntimeException());
-            case -4 -> responseObserver.onError(UNAVAILABLE.withDescription("The service is currently down").asRuntimeException());
+            case -4 -> responseObserver.onError(UNAVAILABLE.withDescription("UNAVAILABLE").asRuntimeException());
             default -> {
                 UserDistLedger.DeleteAccountResponse response = UserDistLedger.DeleteAccountResponse.newBuilder().build();
                 responseObserver.onNext(response);
@@ -82,9 +82,9 @@ public class UserServiceImpl extends UserServiceGrpc.UserServiceImplBase {
         switch (flag) {
             case -1 -> responseObserver.onError(NOT_FOUND.withDescription("AccountFrom not found").asRuntimeException());
             case -2 -> responseObserver.onError(NOT_FOUND.withDescription("AccountTo not found").asRuntimeException());
-            case -3 -> responseObserver.onError(INVALID_ARGUMENT.withDescription("amount has to be greater than zero").asRuntimeException());
+            case -3 -> responseObserver.onError(INVALID_ARGUMENT.withDescription("Amount has to be greater than zero").asRuntimeException());
             case -4 -> responseObserver.onError(PERMISSION_DENIED.withDescription("Balance lower than amount to send").asRuntimeException());
-            case -5 -> responseObserver.onError(UNAVAILABLE.withDescription("The service is currently down").asRuntimeException());
+            case -5 -> responseObserver.onError(UNAVAILABLE.withDescription("UNAVAILABLE").asRuntimeException());
             default -> {
                 UserDistLedger.TransferToResponse response = UserDistLedger.TransferToResponse.newBuilder().build();
                 responseObserver.onNext(response);
