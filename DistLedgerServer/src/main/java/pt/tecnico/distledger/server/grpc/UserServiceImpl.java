@@ -42,7 +42,7 @@ public class UserServiceImpl extends UserServiceGrpc.UserServiceImplBase {
 
         int flag = serverState.createAccount(request.getUserId());
 
-        if (flag == 1) {
+        if (flag == -1) {
             responseObserver.onError(ALREADY_EXISTS.withDescription("Username already taken").asRuntimeException());
 
         }

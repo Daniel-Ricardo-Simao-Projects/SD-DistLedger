@@ -28,11 +28,13 @@ public class ServerState {
     public synchronized int createAccount(String userId) {
         if(status == INACTIVE) { return -4; }
 
-        for (UserAccount userAccount : accounts) {
-            if (Objects.equals(userAccount.getUserId(), userId)) {
-                return 1;
-            }
+        UserAccount account = getUserAccount(userId);
+
+        // Account already exists
+        if (account != null) {
+            return -1;
         }
+
         UserAccount newUser = new UserAccount(userId);
         accounts.add(newUser);
         CreateOp createOp = new CreateOp(userId);
@@ -45,18 +47,21 @@ public class ServerState {
         if (userId.equals("broker")) {
             return -3;
         }
-        for (UserAccount userAccount : accounts) {
-            if (Objects.equals(userAccount.getUserId(), userId)) {
-                if (userAccount.getBalance() == 0) {
-                    accounts.remove(userAccount);
-                    DeleteOp deleteOp = new DeleteOp(userId);
-                    ledger.add(deleteOp);
-                    return 0;
-                }
-                return -2;
-            }
+
+        UserAccount account = getUserAccount(userId);
+
+        if (account == null) {
+            return -1;
         }
-        return -1;
+        else if (account.getBalance() != 0) {
+            return -2;
+        }
+        else {
+            accounts.remove(account);
+            DeleteOp deleteOp = new DeleteOp(userId);
+            ledger.add(deleteOp);
+            return 0;
+        }
     }
 
     public synchronized int transferTo(String fromAccount, String destAccount, int amount) {
@@ -88,13 +93,13 @@ public class ServerState {
     public synchronized int getBalanceById(String userId) {
         if(status == INACTIVE) { return -4; }
 
-        for (UserAccount userData : accounts) {
-            if (Objects.equals(userData.getUserId(), userId)) {
-                return userData.getBalance();
-            }
+        UserAccount account = getUserAccount(userId);
+
+        if (account == null) {
+            return -1;
         }
         // If we didn't find a UserAccount object with the given userId, return a default value or throw an exception.
-        return -1;
+        return account.getBalance();
     }
 
     public synchronized UserAccount getUserAccount(String userId) {
