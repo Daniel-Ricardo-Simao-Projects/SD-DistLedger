@@ -15,4 +15,7 @@ public class Operation {
         this.account = account;
     }
 
+    public void accept(OperationVisitor visitor) {
+        visitor.visitOperation(this);
+    }
 }

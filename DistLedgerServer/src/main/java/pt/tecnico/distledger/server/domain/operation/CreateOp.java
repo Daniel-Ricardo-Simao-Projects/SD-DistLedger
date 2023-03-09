@@ -6,4 +6,9 @@ public class CreateOp extends Operation {
         super(account);
     }
 
+    @Override
+    public void accept(OperationVisitor visitor) {
+        visitor.visitCreateOp(this);
+    }
+
 }

@@ -2,8 +2,14 @@ package pt.tecnico.distledger.server.grpc;
 
 import io.grpc.stub.StreamObserver;
 import pt.tecnico.distledger.server.domain.ServerState;
+import pt.tecnico.distledger.server.domain.operation.DistLedgerOperationVisitor;
+import pt.tecnico.distledger.server.domain.operation.Operation;
+import pt.ulisboa.tecnico.distledger.contract.DistLedgerCommonDefinitions;
 import pt.ulisboa.tecnico.distledger.contract.admin.AdminDistLedger;
 import pt.ulisboa.tecnico.distledger.contract.admin.AdminServiceGrpc;
+
+import java.util.ArrayList;
+import java.util.List;
 
 public class AdminServiceImpl extends AdminServiceGrpc.AdminServiceImplBase {
 
@@ -41,6 +47,23 @@ public class AdminServiceImpl extends AdminServiceGrpc.AdminServiceImplBase {
 
     @Override
     public void getLedgerState(AdminDistLedger.getLedgerStateRequest request, StreamObserver<AdminDistLedger.getLedgerStateResponse> responseObserver) {
-        super.getLedgerState(request, responseObserver);
+
+        List<Operation> operations = serverState.getLedgerState();
+
+        DistLedgerOperationVisitor visitor = new DistLedgerOperationVisitor();
+
+        for (Operation operation : operations) {
+            operation.accept(visitor);
+        }
+
+        List<DistLedgerCommonDefinitions.Operation> distLedgerOperations = visitor.getDistLedgerOperations();
+
+        DistLedgerCommonDefinitions.LedgerState ledgerState = DistLedgerCommonDefinitions.LedgerState.newBuilder().addAllLedger(distLedgerOperations).build();
+
+        AdminDistLedger.getLedgerStateResponse response = AdminDistLedger.getLedgerStateResponse.newBuilder().setLedgerState(ledgerState).build();
+
+        responseObserver.onNext(response);
+
+        responseObserver.onCompleted();
     }
 }

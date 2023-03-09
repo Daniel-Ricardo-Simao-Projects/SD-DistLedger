@@ -32,4 +32,10 @@ public class AdminService {
         AdminDistLedger.DeactivateResponse response = stub.deactivate(request);
         return "OK";
     }
+
+    public String getLedgerState() {
+        AdminDistLedger.getLedgerStateRequest request = AdminDistLedger.getLedgerStateRequest.newBuilder().build();
+        AdminDistLedger.getLedgerStateResponse response = stub.getLedgerState(request);
+        return "OK\n" + response.toString();
+    }
 }

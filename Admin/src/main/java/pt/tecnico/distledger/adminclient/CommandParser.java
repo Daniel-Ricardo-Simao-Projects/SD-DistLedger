@@ -96,7 +96,7 @@ public class CommandParser {
         }
         String server = split[1];
 
-        System.out.println("TODO: implement getLedgerState command");
+        System.out.println(adminService.getLedgerState());
     }
 
     @SuppressWarnings("unused")

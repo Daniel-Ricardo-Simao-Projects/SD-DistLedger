@@ -3,6 +3,7 @@ package pt.tecnico.distledger.server.domain;
 import pt.tecnico.distledger.server.domain.operation.CreateOp;
 import pt.tecnico.distledger.server.domain.operation.DeleteOp;
 import pt.tecnico.distledger.server.domain.operation.Operation;
+import pt.tecnico.distledger.server.domain.operation.TransferOp;
 
 import java.util.*;
 
@@ -77,6 +78,9 @@ public class ServerState {
         sender.setBalance(sender.getBalance() - amount);
         receiver.setBalance(receiver.getBalance() + amount);
 
+        TransferOp transferOp = new TransferOp(fromAccount, destAccount, amount);
+        ledger.add(transferOp);
+
         return 0;
 
     }
@@ -108,5 +112,9 @@ public class ServerState {
 
     public void deactivateServer() {
         this.status = INACTIVE;
+    }
+
+    public List<Operation> getLedgerState() {
+        return ledger;
     }
 }

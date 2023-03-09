@@ -26,4 +26,9 @@ public class TransferOp extends Operation {
         this.amount = amount;
     }
 
+    @Override
+    public void accept(OperationVisitor visitor) {
+        visitor.visitTransferOp(this);
+    }
+
 }

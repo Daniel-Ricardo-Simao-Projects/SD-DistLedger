@@ -6,4 +6,9 @@ public class DeleteOp extends Operation {
         super(account);
     }
 
+    @Override
+    public void accept(OperationVisitor visitor) {
+        visitor.visitDeleteOp(this);
+    }
+
 }
