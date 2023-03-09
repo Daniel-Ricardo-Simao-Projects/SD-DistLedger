@@ -48,6 +48,14 @@ To compile and install all modules:
 mvn clean install
 ```
 
+### Debug
+
+To compile and execute with debug:
+
+```s
+mvn clean compile exec:java -Ddebug
+```
+
 ## Built With
 
 * [Maven](https://maven.apache.org/) - Build and dependency management tool;

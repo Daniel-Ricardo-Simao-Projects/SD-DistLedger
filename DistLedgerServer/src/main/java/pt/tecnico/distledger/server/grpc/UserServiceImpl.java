@@ -46,7 +46,7 @@ public class UserServiceImpl extends UserServiceGrpc.UserServiceImplBase {
                     setValue(value).build();
 
             if(DEBUG_FLAG)
-                logger.info("Sending balance response for user " + request.getUserId() + ": " + value);
+                logger.info("Sending balance response for user " + request.getUserId() + " : " + value);
 
             responseObserver.onNext(response);
 
@@ -100,7 +100,7 @@ public class UserServiceImpl extends UserServiceGrpc.UserServiceImplBase {
             }
             case -2 -> {
                 if(DEBUG_FLAG)
-                    logger.severe("Balance of user " + request.getUserId() + "is not zero");
+                    logger.severe("Balance of user " + request.getUserId() + " is not zero");
                 responseObserver.onError(PERMISSION_DENIED.withDescription("Balance not zero").asRuntimeException());
             }
             case -3 -> {
@@ -128,7 +128,7 @@ public class UserServiceImpl extends UserServiceGrpc.UserServiceImplBase {
 
         if(DEBUG_FLAG)
             logger.info("Received transfer request from user " + request.getAccountFrom() +
-                    "to user " + request.getAccountTo());
+                    " to user " + request.getAccountTo());
 
         int flag = serverState.transferTo(request.getAccountFrom(), request.getAccountTo(), request.getAmount());
 

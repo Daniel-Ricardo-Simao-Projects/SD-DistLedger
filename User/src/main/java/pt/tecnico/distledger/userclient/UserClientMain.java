@@ -1,9 +1,11 @@
 package pt.tecnico.distledger.userclient;
 
-
 import pt.tecnico.distledger.userclient.grpc.UserService;
 
 public class UserClientMain {
+
+    private static final boolean DEBUG_FLAG = (System.getProperty("debug") != null);
+
     public static void main(String[] args) {
 
         System.out.println(UserClientMain.class.getSimpleName());
@@ -25,7 +27,7 @@ public class UserClientMain {
         final int port = Integer.parseInt(args[1]);
         final String target = host + ":" + port;
 
-        CommandParser parser = new CommandParser(new UserService(target));
+        CommandParser parser = new CommandParser(new UserService(target, DEBUG_FLAG));
 
         parser.parseInput();
 

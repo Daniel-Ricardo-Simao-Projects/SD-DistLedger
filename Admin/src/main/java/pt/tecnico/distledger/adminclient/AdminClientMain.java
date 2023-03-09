@@ -3,6 +3,9 @@ package pt.tecnico.distledger.adminclient;
 import pt.tecnico.distledger.adminclient.grpc.AdminService;
 
 public class AdminClientMain {
+
+    private static final boolean DEBUG_FLAG = (System.getProperty("debug") != null);
+
     public static void main(String[] args) {
 
         System.out.println(AdminClientMain.class.getSimpleName());
@@ -24,7 +27,7 @@ public class AdminClientMain {
         final int port = Integer.parseInt(args[1]);
         final String target = host + ":" + port;
 
-        CommandParser parser = new CommandParser(new AdminService(target));
+        CommandParser parser = new CommandParser(new AdminService(target, DEBUG_FLAG));
         parser.parseInput();
 
     }
