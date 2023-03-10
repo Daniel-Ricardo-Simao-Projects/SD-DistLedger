@@ -122,4 +122,5 @@ public class ServerState {
     public List<Operation> getLedgerState() {
         return ledger;
     }
+
 }

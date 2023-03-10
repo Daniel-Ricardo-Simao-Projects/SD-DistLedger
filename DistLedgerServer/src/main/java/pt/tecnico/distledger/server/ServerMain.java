@@ -32,6 +32,8 @@ public class ServerMain {
             return;
         }
 
+        if(DEBUG_FLAG) { System.out.printf("Debug Mode Activated!\n"); }
+
         final int port = Integer.parseInt(args[0]);
         final BindableService userImpl = new UserServiceImpl(serverState, DEBUG_FLAG);
         final BindableService adminImpl = new AdminServiceImpl(serverState, DEBUG_FLAG);

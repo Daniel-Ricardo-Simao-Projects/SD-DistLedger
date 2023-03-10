@@ -36,7 +36,7 @@ public class AdminServiceImpl extends AdminServiceGrpc.AdminServiceImplBase {
         AdminDistLedger.ActivateResponse response = AdminDistLedger.ActivateResponse.newBuilder().build();
 
         if(DEBUG_FLAG)
-            logger.info("Sending server activated response for user");
+            logger.info("Sending server activated response for admin");
 
         responseObserver.onNext(response);
 
@@ -55,7 +55,7 @@ public class AdminServiceImpl extends AdminServiceGrpc.AdminServiceImplBase {
         AdminDistLedger.DeactivateResponse response = AdminDistLedger.DeactivateResponse.newBuilder().build();
 
         if(DEBUG_FLAG)
-            logger.info("Sending server deactivated response for user");
+            logger.info("Sending server deactivated response for admin");
 
         responseObserver.onNext(response);
 
@@ -84,7 +84,7 @@ public class AdminServiceImpl extends AdminServiceGrpc.AdminServiceImplBase {
         AdminDistLedger.getLedgerStateResponse response = AdminDistLedger.getLedgerStateResponse.newBuilder().setLedgerState(ledgerState).build();
 
         if(DEBUG_FLAG)
-            logger.info("Sending getLedgerState response for user");
+            logger.info("Sending getLedgerState response for admin");
 
         responseObserver.onNext(response);
 
