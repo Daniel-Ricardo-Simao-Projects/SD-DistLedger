@@ -11,7 +11,7 @@ import static org.junit.jupiter.api.Assertions.*;
 
 class UserClientMainTest {
 
-    UserService userService = new UserService("localhost:2001");
+    UserService userService = new UserService("localhost:2001", false);
     String response;
 
     @BeforeEach
@@ -30,26 +30,26 @@ class UserClientMainTest {
 
     @Test
     void accountAlreadyCreated() {
-        assert (Objects.equals(userService.createAccountService("test"), "Caught exception with description: Username already taken"));
+        assert (Objects.equals(userService.createAccountService("test"), "Caught exception with description: Username already taken\n"));
     }
 
     @Test
     void deleteInvalidAccount() {
-        assert (Objects.equals(userService.deleteAccountService("test2"), "Caught exception with description: User not found"));
+        assert (Objects.equals(userService.deleteAccountService("test2"), "Caught exception with description: User not found\n"));
     }
 
     @Test
     void deleteNonEmptyAccount() {
-        assert (Objects.equals(userService.createAccountService("test2"), "OK"));
-        assert (Objects.equals(userService.transferToService("broker", "test2", 100), "OK"));
-        assert (Objects.equals(userService.deleteAccountService("test2"), "Caught exception with description: Balance not zero"));
-        assert (Objects.equals(userService.transferToService("test2", "broker", 100), "OK"));
-        assert (Objects.equals(userService.deleteAccountService("test2"), "OK"));
+        assert (Objects.equals(userService.createAccountService("test2"), "OK\n"));
+        assert (Objects.equals(userService.transferToService("broker", "test2", 100), "OK\n"));
+        assert (Objects.equals(userService.deleteAccountService("test2"), "Caught exception with description: Balance not zero\n"));
+        assert (Objects.equals(userService.transferToService("test2", "broker", 100), "OK\n"));
+        assert (Objects.equals(userService.deleteAccountService("test2"), "OK\n"));
     }
 
     @Test
     void deleteBrokerAccount() {
-        assert (Objects.equals(userService.deleteAccountService("broker"), "Caught exception with description: Cannot delete broker account"));
+        assert (Objects.equals(userService.deleteAccountService("broker"), "Caught exception with description: Cannot delete broker account\n"));
     }
 
     @Test
@@ -59,17 +59,17 @@ class UserClientMainTest {
 
     @Test
     void transferFromBroker() {
-        assert (Objects.equals(userService.transferToService("broker", "test", 100), "OK"));
+        assert (Objects.equals(userService.transferToService("broker", "test", 100), "OK\n"));
         //System.out.println("R: " + userService.getBalanceService("test") + '|');
         assert (Objects.equals(userService.getBalanceService("test"), "OK\nvalue: 100\n"));
-        assert (Objects.equals(userService.transferToService("test", "broker", 100), "OK"));
+        assert (Objects.equals(userService.transferToService("test", "broker", 100), "OK\n"));
     }
 
     @Test
     void transferErrors() {
-        assert (Objects.equals(userService.transferToService("broker", "test2", 100), "Caught exception with description: AccountTo not found"));
-        assert (Objects.equals(userService.transferToService("broker", "test", -100), "Caught exception with description: amount has to be greater than zero"));
-        assert (Objects.equals(userService.transferToService("broker", "test", 1001), "Caught exception with description: Balance lower than amount to send"));
+        assert (Objects.equals(userService.transferToService("broker", "test2", 100), "Caught exception with description: AccountTo not found\n"));
+        assert (Objects.equals(userService.transferToService("broker", "test", -100), "Caught exception with description: Amount has to be greater than zero\n"));
+        assert (Objects.equals(userService.transferToService("broker", "test", 1001), "Caught exception with description: Balance lower than amount to send\n"));
     }
 
 }
