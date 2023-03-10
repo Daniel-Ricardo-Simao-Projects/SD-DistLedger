@@ -14,11 +14,11 @@ code dependency management, to ensure your code runs using the correct component
 
 ### Team Members
 
-| Number | Name               | User                               | Email                                          |
-|--------|--------------------|------------------------------------|------------------------------------------------|
+| Number | Name               | User     | Email                                          |
+|--------|--------------------|----------|------------------------------------------------|
 | 99194  | Daniel Pereira     | <https://github.com/DaniPalma2002> | <mailto:danielppereira2002@tecnico.ulisboa.pt> |
-| 99315  | Ricardo Toscanelli | <https://github.com/BobUser>       | <mailto:bob@tecnico.ulisboa.pt>                |
-| 99328  | Simão Gato         | <https://github.com/CharlieUser>   | <mailto:charlie@tecnico.ulisboa.pt>            |
+| 99315  | Ricardo Toscanelli | <https://github.com/rtoscanelli>       | <mailto:ricardo.toscanelli@tecnico.ulisboa.pt> |
+| 99328  | Simão Gato         | <https://github.com/SimaoGato> | <mailto:simao.gato@tecnico.ulisboa.pt>         |
 
 ## Getting Started
 
@@ -54,6 +54,20 @@ To compile and execute with debug:
 
 ```s
 mvn clean compile exec:java -Ddebug
+```
+
+### Tests
+
+To run our tests:
+1) Run server
+
+```s
+mvn clean compile exec:java
+```
+2) Run tests in User
+
+```s
+mvn clean compile verify
 ```
 
 ## Built With
