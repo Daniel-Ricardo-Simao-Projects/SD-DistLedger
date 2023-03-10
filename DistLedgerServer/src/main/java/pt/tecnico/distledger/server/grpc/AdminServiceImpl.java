@@ -28,18 +28,15 @@ public class AdminServiceImpl extends AdminServiceGrpc.AdminServiceImplBase {
     @Override
     public void activate(AdminDistLedger.ActivateRequest request, StreamObserver<AdminDistLedger.ActivateResponse> responseObserver) {
 
-        if(DEBUG_FLAG)
-            logger.info("Received activate server request from admin");
+        if(DEBUG_FLAG) { logger.info("Received activate server request from admin"); }
 
         serverState.activateServer();
 
         AdminDistLedger.ActivateResponse response = AdminDistLedger.ActivateResponse.newBuilder().build();
 
-        if(DEBUG_FLAG)
-            logger.info("Sending server activated response for admin");
+        if(DEBUG_FLAG) { logger.info("Sending server activated response for admin"); }
 
         responseObserver.onNext(response);
-
         responseObserver.onCompleted();
 
     }
@@ -47,18 +44,15 @@ public class AdminServiceImpl extends AdminServiceGrpc.AdminServiceImplBase {
     @Override
     public void deactivate(AdminDistLedger.DeactivateRequest request, StreamObserver<AdminDistLedger.DeactivateResponse> responseObserver) {
 
-        if(DEBUG_FLAG)
-            logger.info("Received deactivate server request from admin");
+        if(DEBUG_FLAG) { logger.info("Received deactivate server request from admin"); }
 
         serverState.deactivateServer();
 
         AdminDistLedger.DeactivateResponse response = AdminDistLedger.DeactivateResponse.newBuilder().build();
 
-        if(DEBUG_FLAG)
-            logger.info("Sending server deactivated response for admin");
+        if(DEBUG_FLAG) { logger.info("Sending server deactivated response for admin"); }
 
         responseObserver.onNext(response);
-
         responseObserver.onCompleted();
 
     }
@@ -66,8 +60,7 @@ public class AdminServiceImpl extends AdminServiceGrpc.AdminServiceImplBase {
     @Override
     public void getLedgerState(AdminDistLedger.getLedgerStateRequest request, StreamObserver<AdminDistLedger.getLedgerStateResponse> responseObserver) {
 
-        if(DEBUG_FLAG)
-            logger.info("Received get ledger state request from admin");
+        if(DEBUG_FLAG) { logger.info("Received get ledger state request from admin"); }
 
         List<Operation> operations = serverState.getLedgerState();
 
@@ -83,11 +76,9 @@ public class AdminServiceImpl extends AdminServiceGrpc.AdminServiceImplBase {
 
         AdminDistLedger.getLedgerStateResponse response = AdminDistLedger.getLedgerStateResponse.newBuilder().setLedgerState(ledgerState).build();
 
-        if(DEBUG_FLAG)
-            logger.info("Sending getLedgerState response for admin");
+        if(DEBUG_FLAG) { logger.info("Sending getLedgerState response for admin"); }
 
         responseObserver.onNext(response);
-
         responseObserver.onCompleted();
     }
 }

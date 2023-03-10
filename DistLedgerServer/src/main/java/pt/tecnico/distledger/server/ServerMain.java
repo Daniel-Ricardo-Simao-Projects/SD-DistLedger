@@ -11,7 +11,6 @@ import java.io.IOException;
 
 public class ServerMain {
 
-    //public ServerState serverState = new ServerState();
     private static boolean DEBUG_FLAG = (System.getProperty("debug") != null);
 
     public static void main(String[] args) throws IOException, InterruptedException {
