@@ -21,7 +21,7 @@ public class AdminService {
 
         this.DEBUG_FLAG = DEBUG_FLAG;
 
-        channel = ManagedChannelBuilder.forTarget("localhost:2001").usePlaintext().build();
+        channel = ManagedChannelBuilder.forTarget(target).usePlaintext().build();
         if(DEBUG_FLAG) { logger.info("channel created: " + channel.toString()); }
 
         stub = AdminServiceGrpc.newBlockingStub(channel);

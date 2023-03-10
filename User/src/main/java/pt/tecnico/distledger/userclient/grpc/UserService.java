@@ -21,12 +21,11 @@ public class UserService {
 
     public UserService(String target, final boolean DEBUG_FLAG) {
         this.DEBUG_FLAG = DEBUG_FLAG;
-        channel = ManagedChannelBuilder.forTarget(target).usePlaintext().build();
 
+        channel = ManagedChannelBuilder.forTarget(target).usePlaintext().build();
         if(DEBUG_FLAG) { logger.info("channel created: " + channel.toString()); }
 
         stub = UserServiceGrpc.newBlockingStub(channel);
-
         if(DEBUG_FLAG) { logger.info("stub created" + stub.toString()); }
     }
 

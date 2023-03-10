@@ -36,7 +36,6 @@ public class UserServiceImpl extends UserServiceGrpc.UserServiceImplBase {
                 logger.warning("User " + request.getUserId() + " already exists");
 
             responseObserver.onError(ALREADY_EXISTS.withDescription("Username already taken").asRuntimeException());
-
         }
         else if(flag == ErrorCode.SERVER_UNAVAILABLE.getCode()) {
             if(DEBUG_FLAG)
@@ -89,7 +88,6 @@ public class UserServiceImpl extends UserServiceGrpc.UserServiceImplBase {
             responseObserver.onNext(response);
             responseObserver.onCompleted();
         }
-
     }
 
     @Override
@@ -164,7 +162,6 @@ public class UserServiceImpl extends UserServiceGrpc.UserServiceImplBase {
             responseObserver.onNext(response);
             responseObserver.onCompleted();
         }
-
-
     }
+
 }

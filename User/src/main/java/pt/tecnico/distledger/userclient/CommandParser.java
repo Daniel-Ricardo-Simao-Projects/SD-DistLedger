@@ -77,7 +77,6 @@ public class CommandParser {
         System.out.println(userService.deleteAccountService(username));
     }
 
-
     private void balance(String line){
         String[] split = line.split(SPACE);
 
