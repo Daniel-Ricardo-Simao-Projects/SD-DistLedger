@@ -1,6 +1,6 @@
 package pt.tecnico.distledger.namingserver;
 
-public class NamingServer {
+public class NamingServerMain {
 
     public static void main(String[] args) {
 
