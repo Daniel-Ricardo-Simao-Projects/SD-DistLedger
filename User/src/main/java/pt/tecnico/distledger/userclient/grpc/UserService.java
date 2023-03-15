@@ -66,7 +66,7 @@ public class UserService {
         UserDistLedger.BalanceRequest request = UserDistLedger.BalanceRequest.newBuilder().setUserId(username).build();
         try {
             UserDistLedger.BalanceResponse response = stub.balance(request);
-            return "OK\n" + response.toString();
+            return "OK\n" + response.getValue() + "\n";
         }
         catch (StatusRuntimeException e) {
             if(DEBUG_FLAG) { logger.severe("user received getBalance error status: " + e.getStatus()); }
