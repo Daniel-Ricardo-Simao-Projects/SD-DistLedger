@@ -16,26 +16,23 @@ public class ServerState {
 
     private List<Operation> ledger;
 
-    private Set<UserAccount> accounts;
+    private Map<String, Integer> accounts;
 
     private int status;
 
     public ServerState() {
         this.ledger = new ArrayList<>();
-        this.accounts = new LinkedHashSet<>();
+        this.accounts = new HashMap<>();
         this.status = ACTIVE;
-        this.accounts.add(new UserAccount("broker", 1000));
+        this.accounts.put("broker", 1000);
     }
 
     public synchronized int createAccount(String userId) {
         if(isInactive()) { return ErrorCode.SERVER_UNAVAILABLE.getCode(); }
 
-        UserAccount account = getUserAccount(userId);
+        if (accounts.containsKey(userId)) { return ErrorCode.ACCOUNT_ALREADY_EXISTS.getCode(); }
 
-        if (account != null) { return ErrorCode.ACCOUNT_ALREADY_EXISTS.getCode(); }
-
-        UserAccount newUser = new UserAccount(userId);
-        accounts.add(newUser);
+        accounts.put(userId, 0);
         CreateOp createOp = new CreateOp(userId);
         ledger.add(createOp);
 
@@ -47,12 +44,12 @@ public class ServerState {
 
         if (isBroker(userId)) { return ErrorCode.CANNOT_REMOVE_BROKER.getCode(); }
 
-        UserAccount account = getUserAccount(userId);
+        Integer balance = accounts.get(userId);
 
-        if (account == null) { return ErrorCode.ACCOUNT_DOESNT_EXIST.getCode(); }
-        else if (account.getBalance() != 0) { return ErrorCode.BALANCE_ISNT_ZERO.getCode(); }
+        if (balance == null) { return ErrorCode.ACCOUNT_DOESNT_EXIST.getCode(); }
+        else if (balance != 0) { return ErrorCode.BALANCE_ISNT_ZERO.getCode(); }
         else {
-            accounts.remove(account);
+            accounts.remove(userId);
             DeleteOp deleteOp = new DeleteOp(userId);
             ledger.add(deleteOp);
             return 0;
@@ -62,26 +59,26 @@ public class ServerState {
     public synchronized int getBalanceById(String userId) {
         if(isInactive()) { return ErrorCode.SERVER_UNAVAILABLE.getCode(); }
 
-        UserAccount account = getUserAccount(userId);
+        Integer balance = accounts.get(userId);
 
-        if (account == null) { return ErrorCode.ACCOUNT_DOESNT_EXIST.getCode(); }
+        if (balance == null) { return ErrorCode.ACCOUNT_DOESNT_EXIST.getCode(); }
 
-        return account.getBalance();
+        return balance;
     }
 
     public synchronized int transferTo(String userId, String destAccount, int amount) {
         if(isInactive()) { return ErrorCode.SERVER_UNAVAILABLE.getCode(); }
 
-        UserAccount sender = getUserAccount(userId);
-        UserAccount receiver = getUserAccount(destAccount);
+        Integer senderBalance = accounts.get(userId);
+        Integer receiverBalance = accounts.get(destAccount);
 
-        if (sender == null) { return ErrorCode.ACCOUNT_DOESNT_EXIST.getCode(); }
-        if (receiver == null) { return ErrorCode.DEST_ACCOUNT_DOESNT_EXIST.getCode(); }
+        if (senderBalance == null) { return ErrorCode.ACCOUNT_DOESNT_EXIST.getCode(); }
+        if (receiverBalance == null) { return ErrorCode.DEST_ACCOUNT_DOESNT_EXIST.getCode(); }
         if (amount < 0) { return ErrorCode.NEGATIVE_BALANCE.getCode(); }
-        if (sender.getBalance() < amount) { return ErrorCode.TRANSFER_BIGGER_THAN_BALANCE.getCode(); }
+        if (senderBalance < amount) { return ErrorCode.TRANSFER_BIGGER_THAN_BALANCE.getCode(); }
 
-        sender.setBalance(sender.getBalance() - amount);
-        receiver.setBalance(receiver.getBalance() + amount);
+        accounts.put(userId, senderBalance - amount);
+        accounts.put(destAccount, receiverBalance + amount);
 
         TransferOp transferOp = new TransferOp(userId, destAccount, amount);
         ledger.add(transferOp);
@@ -95,16 +92,7 @@ public class ServerState {
 
     public List<Operation> getLedgerState() { return ledger; }
 
-    public synchronized UserAccount getUserAccount(String userId) {
-        for (UserAccount userAccount : accounts) {
-            if (Objects.equals(userAccount.getUserId(), userId)) {
-                return userAccount;
-            }
-        }
-        return null;
-    }
-
     private boolean isInactive() { return status == INACTIVE; }
 
-    private boolean isBroker(String userId) { return Objects.equals(userId, "broker"); }
+    private boolean isBroker(String userId) { return "broker".equals(userId); }
 }
