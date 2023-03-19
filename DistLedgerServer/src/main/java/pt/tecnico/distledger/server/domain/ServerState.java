@@ -68,6 +68,7 @@ public class ServerState {
 
     public synchronized int transferTo(String userId, String destAccount, int amount) {
         if(isInactive()) { return ErrorCode.SERVER_UNAVAILABLE.getCode(); }
+        if(userId.equals(destAccount)) { return ErrorCode.DEST_ACCOUNT_EQUAL_TO_FROM_ACCOUNT.getCode(); }
 
         Integer senderBalance = accounts.get(userId);
         Integer receiverBalance = accounts.get(destAccount);
@@ -75,6 +76,7 @@ public class ServerState {
         if (senderBalance == null) { return ErrorCode.ACCOUNT_DOESNT_EXIST.getCode(); }
         if (receiverBalance == null) { return ErrorCode.DEST_ACCOUNT_DOESNT_EXIST.getCode(); }
         if (amount < 0) { return ErrorCode.NEGATIVE_BALANCE.getCode(); }
+        if (amount == 0) { return ErrorCode.AMOUNT_IS_ZERO.getCode();}
         if (senderBalance < amount) { return ErrorCode.TRANSFER_BIGGER_THAN_BALANCE.getCode(); }
 
         accounts.put(userId, senderBalance - amount);

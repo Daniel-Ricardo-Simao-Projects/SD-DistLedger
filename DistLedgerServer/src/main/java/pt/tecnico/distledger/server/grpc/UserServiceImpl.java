@@ -133,6 +133,12 @@ public class UserServiceImpl extends UserServiceGrpc.UserServiceImplBase {
                 logger.severe("AccountFrom " + request.getAccountFrom() + " not found");
             }
             responseObserver.onError(NOT_FOUND.withDescription("AccountFrom not found").asRuntimeException());
+        } else if (flag == ErrorCode.DEST_ACCOUNT_EQUAL_TO_FROM_ACCOUNT.getCode()) {
+            if (DEBUG_FLAG) {
+                logger.severe("AccountFrom: " + request.getAccountFrom() +  "is equal to AccountTo: " + request.getAccountTo());
+            }
+            responseObserver.onError(INVALID_ARGUMENT.withDescription("Destination account is equal to from account").asRuntimeException());
+
         } else if (flag == ErrorCode.DEST_ACCOUNT_DOESNT_EXIST.getCode()) {
             if (DEBUG_FLAG) {
                 logger.severe("AccountTo " + request.getAccountTo() + " not found");
@@ -141,6 +147,11 @@ public class UserServiceImpl extends UserServiceGrpc.UserServiceImplBase {
         } else if (flag == ErrorCode.NEGATIVE_BALANCE.getCode()) {
             if (DEBUG_FLAG) {
                 logger.severe("The amount <" + request.getAmount() + "> is negative");
+            }
+            responseObserver.onError(INVALID_ARGUMENT.withDescription("Amount has to be greater than zero").asRuntimeException());
+        } else if (flag == ErrorCode.AMOUNT_IS_ZERO.getCode()) {
+            if (DEBUG_FLAG) {
+                logger.severe("The amount <" + request.getAmount() + "> is zero");
             }
             responseObserver.onError(INVALID_ARGUMENT.withDescription("Amount has to be greater than zero").asRuntimeException());
         } else if (flag == ErrorCode.TRANSFER_BIGGER_THAN_BALANCE.getCode()) {

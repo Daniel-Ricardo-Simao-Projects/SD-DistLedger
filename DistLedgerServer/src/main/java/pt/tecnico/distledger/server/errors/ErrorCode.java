@@ -9,7 +9,9 @@ public enum ErrorCode {
     BALANCE_ISNT_ZERO (-5),
     TRANSFER_BIGGER_THAN_BALANCE(-6),
     NEGATIVE_BALANCE(-7),
-    CANNOT_REMOVE_BROKER(-8);
+    CANNOT_REMOVE_BROKER(-8),
+    AMOUNT_IS_ZERO(-9),
+    DEST_ACCOUNT_EQUAL_TO_FROM_ACCOUNT(-10);
 
     private final int code;
 

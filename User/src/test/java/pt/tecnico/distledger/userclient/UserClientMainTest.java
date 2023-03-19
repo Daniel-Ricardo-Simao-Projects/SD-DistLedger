@@ -54,14 +54,14 @@ class UserClientMainTest {
 
     @Test
     void getEmptyBalance() {
-        assert (Objects.equals(userService.getBalanceService("test"), "OK\n"));
+        assert (Objects.equals(userService.getBalanceService("test"), "OK\n0\n"));
     }
 
     @Test
     void transferFromBroker() {
         assert (Objects.equals(userService.transferToService("broker", "test", 100), "OK\n"));
         //System.out.println("R: " + userService.getBalanceService("test") + '|');
-        assert (Objects.equals(userService.getBalanceService("test"), "OK\nvalue: 100\n"));
+        assert (Objects.equals(userService.getBalanceService("test"), "OK\n100\n"));
         assert (Objects.equals(userService.transferToService("test", "broker", 100), "OK\n"));
     }
 
