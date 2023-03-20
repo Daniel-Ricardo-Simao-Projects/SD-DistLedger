@@ -1,6 +1,7 @@
 package pt.tecnico.distledger.server.grpc;
 
 import io.grpc.stub.StreamObserver;
+import pt.tecnico.distledger.server.serverExceptions.*;
 import pt.ulisboa.tecnico.distledger.contract.user.UserDistLedger;
 import pt.ulisboa.tecnico.distledger.contract.user.UserServiceGrpc;
 import pt.tecnico.distledger.server.domain.ServerState;
@@ -26,145 +27,101 @@ public class UserServiceImpl extends UserServiceGrpc.UserServiceImplBase {
     @Override
     public void createAccount(UserDistLedger.CreateAccountRequest request, StreamObserver<UserDistLedger.CreateAccountResponse> responseObserver) {
 
-        if(DEBUG_FLAG)
-            logger.info("Received create account request with username " + request.getUserId());
+        if (DEBUG_FLAG) logger.info("Received create account request with username " + request.getUserId());
 
-        int flag = serverState.createAccount(request.getUserId());
+        try {
+            serverState.createAccount(request.getUserId());
 
-        if (flag == ErrorCode.ACCOUNT_ALREADY_EXISTS.getCode()) {
-            if(DEBUG_FLAG)
-                logger.warning("User " + request.getUserId() + " already exists");
-
-            responseObserver.onError(ALREADY_EXISTS.withDescription("Username already taken").asRuntimeException());
-        }
-        else if(flag == ErrorCode.SERVER_UNAVAILABLE.getCode()) {
-            if(DEBUG_FLAG)
-                logger.severe("Server unavailable");
-
-            responseObserver.onError(UNAVAILABLE.withDescription("UNAVAILABLE").asRuntimeException());
-        }
-        else {
             UserDistLedger.CreateAccountResponse response = UserDistLedger.CreateAccountResponse.newBuilder().build();
-            if(DEBUG_FLAG)
-                logger.info("Sending create account response for user " + request.getUserId());
+            if (DEBUG_FLAG) logger.info("Sending create account response for user " + request.getUserId());
+
             responseObserver.onNext(response);
             responseObserver.onCompleted();
+
+        } catch (AccountAlreadyExistsException e) {
+            if (DEBUG_FLAG) logger.warning("User " + request.getUserId() + " already exists");
+
+            responseObserver.onError(ALREADY_EXISTS.withDescription(e.getMessage()).asRuntimeException());
+
+        } catch (ServerUnavailableException e) {
+            if (DEBUG_FLAG) logger.severe("Server unavailable");
+
+            responseObserver.onError(UNAVAILABLE.withDescription(e.getMessage()).asRuntimeException());
         }
     }
 
     @Override
     public void deleteAccount(UserDistLedger.DeleteAccountRequest request, StreamObserver<UserDistLedger.DeleteAccountResponse> responseObserver) {
 
-        if(DEBUG_FLAG)
-            logger.info("Received delete account request of user " + request.getUserId());
+        if (DEBUG_FLAG) logger.info("Received delete account request of user " + request.getUserId());
 
-        int flag = serverState.deleteAccount(request.getUserId());
+        try {
+            serverState.deleteAccount(request.getUserId());
 
-        if (flag == ErrorCode.ACCOUNT_DOESNT_EXIST.getCode()) {
-            if (DEBUG_FLAG) {
-                logger.severe("User " + request.getUserId() + " not found");
-            }
-            responseObserver.onError(NOT_FOUND.withDescription("User not found").asRuntimeException());
-        } else if (flag == ErrorCode.BALANCE_ISNT_ZERO.getCode()) {
-            if (DEBUG_FLAG) {
-                logger.severe("Balance of user " + request.getUserId() + " is not zero");
-            }
-            responseObserver.onError(PERMISSION_DENIED.withDescription("Balance not zero").asRuntimeException());
-        } else if (flag == ErrorCode.CANNOT_REMOVE_BROKER.getCode()) {
-            if (DEBUG_FLAG) {
-                logger.severe("User tried to remove broker");
-            }
-            responseObserver.onError(PERMISSION_DENIED.withDescription("Cannot delete broker account").asRuntimeException());
-        } else if (flag == ErrorCode.SERVER_UNAVAILABLE.getCode()) {
-            if (DEBUG_FLAG) {
-                logger.severe("Server unavailable");
-            }
-            responseObserver.onError(UNAVAILABLE.withDescription("UNAVAILABLE").asRuntimeException());
-        } else {
             UserDistLedger.DeleteAccountResponse response = UserDistLedger.DeleteAccountResponse.newBuilder().build();
-            if (DEBUG_FLAG) {
-                logger.info("Sending delete account response for user " + request.getUserId());
-            }
+            if (DEBUG_FLAG) logger.info("Sending delete account response for user " + request.getUserId());
+
             responseObserver.onNext(response);
             responseObserver.onCompleted();
+
+        } catch (AccountDoesntExistException e) {
+            if (DEBUG_FLAG) logger.severe("User " + request.getUserId() + " not found");
+
+            responseObserver.onError(NOT_FOUND.withDescription(e.getMessage()).asRuntimeException());
+
+        } catch (BalanceIsntZeroException e) {
+            if (DEBUG_FLAG) logger.severe("Balance of user " + request.getUserId() + " is not zero");
+
+            responseObserver.onError(PERMISSION_DENIED.withDescription(e.getMessage()).asRuntimeException());
+
+        } catch (CannotRemoveBrokerException e) {
+            if (DEBUG_FLAG) logger.severe("User tried to remove broker");
+
+            responseObserver.onError(PERMISSION_DENIED.withDescription(e.getMessage()).asRuntimeException());
+
+        } catch (ServerUnavailableException e) {
+            if (DEBUG_FLAG) logger.severe("Server unavailable");
+
+            responseObserver.onError(UNAVAILABLE.withDescription(e.getMessage()).asRuntimeException());
         }
     }
 
     @Override
     public void balance(UserDistLedger.BalanceRequest request, StreamObserver<UserDistLedger.BalanceResponse> responseObserver) {
 
-        if(DEBUG_FLAG)
-            logger.info("Received balance request for user " + request.getUserId());
+        if (DEBUG_FLAG) logger.info("Received balance request for user " + request.getUserId());
 
-        int value = serverState.getBalanceById(request.getUserId());
+        try {
+            int value = serverState.getBalanceById(request.getUserId());
 
-        if (value == ErrorCode.ACCOUNT_DOESNT_EXIST.getCode()) {
-            if (DEBUG_FLAG) {
-                logger.warning("User " + request.getUserId() + " not found");
-            }
-            responseObserver.onError(NOT_FOUND.withDescription("User not found").asRuntimeException());
-        } else if (value == ErrorCode.SERVER_UNAVAILABLE.getCode()) {
-            if (DEBUG_FLAG) {
-                logger.severe("Server unavailable");
-            }
-            responseObserver.onError(UNAVAILABLE.withDescription("UNAVAILABLE").asRuntimeException());
-        } else {
             UserDistLedger.BalanceResponse response = UserDistLedger.BalanceResponse.newBuilder()
                     .setValue(value).build();
-            if (DEBUG_FLAG) {
-                logger.info("Sending balance response for user " + request.getUserId() + " : " + value);
-            }
+            if (DEBUG_FLAG) logger.info("Sending balance response for user " + request.getUserId() + " : " + value);
+
             responseObserver.onNext(response);
             responseObserver.onCompleted();
+
+        } catch (AccountDoesntExistException e) {
+            if (DEBUG_FLAG) logger.warning("User " + request.getUserId() + " not found");
+
+            responseObserver.onError(NOT_FOUND.withDescription(e.getMessage()).asRuntimeException());
+
+        } catch (ServerUnavailableException e) {
+            if (DEBUG_FLAG) logger.severe("Server unavailable");
+
+            responseObserver.onError(UNAVAILABLE.withDescription(e.getMessage()).asRuntimeException());
         }
     }
 
     @Override
     public void transferTo(UserDistLedger.TransferToRequest request, StreamObserver<UserDistLedger.TransferToResponse> responseObserver) {
 
-        if(DEBUG_FLAG)
-            logger.info("Received transfer request from user " + request.getAccountFrom() +
+        if (DEBUG_FLAG) logger.info("Received transfer request from user " + request.getAccountFrom() +
                     " to user " + request.getAccountTo());
 
-        int flag = serverState.transferTo(request.getAccountFrom(), request.getAccountTo(), request.getAmount());
+        try {
+            serverState.transferTo(request.getAccountFrom(), request.getAccountTo(), request.getAmount());
 
-        if (flag == ErrorCode.ACCOUNT_DOESNT_EXIST.getCode()) {
-            if (DEBUG_FLAG) {
-                logger.severe("AccountFrom " + request.getAccountFrom() + " not found");
-            }
-            responseObserver.onError(NOT_FOUND.withDescription("AccountFrom not found").asRuntimeException());
-        } else if (flag == ErrorCode.DEST_ACCOUNT_EQUAL_TO_FROM_ACCOUNT.getCode()) {
-            if (DEBUG_FLAG) {
-                logger.severe("AccountFrom: " + request.getAccountFrom() +  "is equal to AccountTo: " + request.getAccountTo());
-            }
-            responseObserver.onError(INVALID_ARGUMENT.withDescription("Destination account is equal to from account").asRuntimeException());
-
-        } else if (flag == ErrorCode.DEST_ACCOUNT_DOESNT_EXIST.getCode()) {
-            if (DEBUG_FLAG) {
-                logger.severe("AccountTo " + request.getAccountTo() + " not found");
-            }
-            responseObserver.onError(NOT_FOUND.withDescription("AccountTo not found").asRuntimeException());
-        } else if (flag == ErrorCode.NEGATIVE_BALANCE.getCode()) {
-            if (DEBUG_FLAG) {
-                logger.severe("The amount <" + request.getAmount() + "> is negative");
-            }
-            responseObserver.onError(INVALID_ARGUMENT.withDescription("Amount has to be greater than zero").asRuntimeException());
-        } else if (flag == ErrorCode.AMOUNT_IS_ZERO.getCode()) {
-            if (DEBUG_FLAG) {
-                logger.severe("The amount <" + request.getAmount() + "> is zero");
-            }
-            responseObserver.onError(INVALID_ARGUMENT.withDescription("Amount has to be greater than zero").asRuntimeException());
-        } else if (flag == ErrorCode.TRANSFER_BIGGER_THAN_BALANCE.getCode()) {
-            if (DEBUG_FLAG) {
-                logger.severe("The amount <" + request.getAmount() + "> is bigger than the AccountFrom balance");
-            }
-            responseObserver.onError(PERMISSION_DENIED.withDescription("Balance lower than amount to send").asRuntimeException());
-        } else if (flag == ErrorCode.SERVER_UNAVAILABLE.getCode()) {
-            if (DEBUG_FLAG) {
-                logger.severe("Server unavailable");
-            }
-            responseObserver.onError(UNAVAILABLE.withDescription("UNAVAILABLE").asRuntimeException());
-        } else {
             UserDistLedger.TransferToResponse response = UserDistLedger.TransferToResponse.newBuilder().build();
             if (DEBUG_FLAG) {
                 logger.info("Sending transferTo response from user " + request.getAccountFrom() +
@@ -172,6 +129,41 @@ public class UserServiceImpl extends UserServiceGrpc.UserServiceImplBase {
             }
             responseObserver.onNext(response);
             responseObserver.onCompleted();
+
+        } catch (AccountDoesntExistException e) {
+            if (DEBUG_FLAG) logger.severe("AccountFrom " + request.getAccountFrom() + " not found");
+
+            responseObserver.onError(NOT_FOUND.withDescription(e.getMessage()).asRuntimeException());
+
+        } catch (DestAccountEqualToFromAccountException e) {
+            if (DEBUG_FLAG) logger.severe("AccountFrom: " + request.getAccountFrom() +  "is equal to AccountTo: " + request.getAccountTo());
+
+            responseObserver.onError(INVALID_ARGUMENT.withDescription(e.getMessage()).asRuntimeException());
+
+        } catch (DestAccountDoesntExistException e) {
+            if (DEBUG_FLAG) logger.severe("AccountTo " + request.getAccountTo() + " not found");
+
+            responseObserver.onError(NOT_FOUND.withDescription(e.getMessage()).asRuntimeException());
+
+        } catch (NegativeBalanceException e) {
+            if (DEBUG_FLAG) logger.severe("The amount <" + request.getAmount() + "> is negative");
+
+            responseObserver.onError(INVALID_ARGUMENT.withDescription(e.getMessage()).asRuntimeException());
+
+        } catch (AmountIsZeroException e) {
+            if (DEBUG_FLAG) logger.severe("The amount <" + request.getAmount() + "> is zero");
+
+            responseObserver.onError(INVALID_ARGUMENT.withDescription(e.getMessage()).asRuntimeException());
+
+        } catch (TransferBiggerThanBalanceException e) {
+            if (DEBUG_FLAG) logger.severe("The amount <" + request.getAmount() + "> is bigger than the AccountFrom balance");
+
+            responseObserver.onError(PERMISSION_DENIED.withDescription(e.getMessage()).asRuntimeException());
+
+        } catch (ServerUnavailableException e) {
+            if (DEBUG_FLAG) logger.severe("Server unavailable");
+
+            responseObserver.onError(UNAVAILABLE.withDescription(e.getMessage()).asRuntimeException());
         }
     }
 

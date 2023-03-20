@@ -4,7 +4,7 @@ import pt.tecnico.distledger.server.domain.operation.CreateOp;
 import pt.tecnico.distledger.server.domain.operation.DeleteOp;
 import pt.tecnico.distledger.server.domain.operation.Operation;
 import pt.tecnico.distledger.server.domain.operation.TransferOp;
-import pt.tecnico.distledger.server.errors.ErrorCode;
+import pt.tecnico.distledger.server.serverExceptions.*;
 
 import java.util.*;
 
@@ -27,65 +27,60 @@ public class ServerState {
         this.accounts.put("broker", 1000);
     }
 
-    public synchronized int createAccount(String userId) {
-        if(isInactive()) { return ErrorCode.SERVER_UNAVAILABLE.getCode(); }
+    public synchronized void createAccount(String userId) throws AccountAlreadyExistsException, ServerUnavailableException {
+        if (isInactive()) { throw new ServerUnavailableException(); }
 
-        if (accounts.containsKey(userId)) { return ErrorCode.ACCOUNT_ALREADY_EXISTS.getCode(); }
+        if (accounts.containsKey(userId)) { throw new AccountAlreadyExistsException(); }
 
         accounts.put(userId, 0);
         CreateOp createOp = new CreateOp(userId);
         ledger.add(createOp);
-
-        return 0;
     }
 
-    public synchronized int deleteAccount(String userId) {
-        if(isInactive()) { return ErrorCode.SERVER_UNAVAILABLE.getCode(); }
+    public synchronized void deleteAccount(String userId) throws BalanceIsntZeroException, AccountDoesntExistException, CannotRemoveBrokerException, ServerUnavailableException {
+        if (isInactive()) { throw new ServerUnavailableException(); }
 
-        if (isBroker(userId)) { return ErrorCode.CANNOT_REMOVE_BROKER.getCode(); }
+        if (isBroker(userId)) { throw new CannotRemoveBrokerException(); }
 
         Integer balance = accounts.get(userId);
 
-        if (balance == null) { return ErrorCode.ACCOUNT_DOESNT_EXIST.getCode(); }
-        else if (balance != 0) { return ErrorCode.BALANCE_ISNT_ZERO.getCode(); }
+        if (balance == null) { throw new AccountDoesntExistException(); }
+        else if (balance != 0) { throw new BalanceIsntZeroException(); }
         else {
             accounts.remove(userId);
             DeleteOp deleteOp = new DeleteOp(userId);
             ledger.add(deleteOp);
-            return 0;
         }
     }
 
-    public synchronized int getBalanceById(String userId) {
-        if(isInactive()) { return ErrorCode.SERVER_UNAVAILABLE.getCode(); }
+    public synchronized int getBalanceById(String userId) throws AccountDoesntExistException, ServerUnavailableException {
+        if (isInactive()) { throw new ServerUnavailableException(); }
 
         Integer balance = accounts.get(userId);
 
-        if (balance == null) { return ErrorCode.ACCOUNT_DOESNT_EXIST.getCode(); }
+        if (balance == null) { throw new AccountDoesntExistException(); }
 
         return balance;
     }
 
-    public synchronized int transferTo(String userId, String destAccount, int amount) {
-        if(isInactive()) { return ErrorCode.SERVER_UNAVAILABLE.getCode(); }
-        if(userId.equals(destAccount)) { return ErrorCode.DEST_ACCOUNT_EQUAL_TO_FROM_ACCOUNT.getCode(); }
+    public synchronized void transferTo(String userId, String destAccount, int amount) throws ServerUnavailableException, DestAccountEqualToFromAccountException, AccountDoesntExistException, DestAccountDoesntExistException, AmountIsZeroException, TransferBiggerThanBalanceException, NegativeBalanceException {
+        if (isInactive()) { throw new ServerUnavailableException(); }
+        if (userId.equals(destAccount)) { throw new DestAccountEqualToFromAccountException(); }
 
         Integer senderBalance = accounts.get(userId);
         Integer receiverBalance = accounts.get(destAccount);
 
-        if (senderBalance == null) { return ErrorCode.ACCOUNT_DOESNT_EXIST.getCode(); }
-        if (receiverBalance == null) { return ErrorCode.DEST_ACCOUNT_DOESNT_EXIST.getCode(); }
-        if (amount < 0) { return ErrorCode.NEGATIVE_BALANCE.getCode(); }
-        if (amount == 0) { return ErrorCode.AMOUNT_IS_ZERO.getCode();}
-        if (senderBalance < amount) { return ErrorCode.TRANSFER_BIGGER_THAN_BALANCE.getCode(); }
+        if (senderBalance == null) { throw new AccountDoesntExistException(); }
+        if (receiverBalance == null) { throw new DestAccountDoesntExistException(); }
+        if (amount < 0) { throw new NegativeBalanceException(); }
+        if (amount == 0) { throw new AmountIsZeroException(); }
+        if (senderBalance < amount) { throw new TransferBiggerThanBalanceException(); }
 
         accounts.put(userId, senderBalance - amount);
         accounts.put(destAccount, receiverBalance + amount);
 
         TransferOp transferOp = new TransferOp(userId, destAccount, amount);
         ledger.add(transferOp);
-
-        return 0;
     }
 
     public void activateServer() { this.status = ACTIVE; }
