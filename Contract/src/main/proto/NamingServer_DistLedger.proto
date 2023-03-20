@@ -1,5 +1,5 @@
 syntax = "proto3";
-package pt.ulisboa.tecnico.distledger.contract;
+package pt.ulisboa.tecnico.distledger.contract.namingserver;
 
 message RegisterRequest {
   string serviceName = 1;
@@ -10,6 +10,6 @@ message RegisterRequest {
 message RegisterResponse {
 }
 
-service DistLedgerNamingServerService {
+service NamingServerService {
   rpc register(RegisterRequest) returns (RegisterResponse);
 }
