@@ -6,10 +6,13 @@ import io.grpc.ServerBuilder;
 import pt.tecnico.distledger.server.domain.ServerState;
 import pt.tecnico.distledger.server.grpc.AdminServiceImpl;
 import pt.tecnico.distledger.server.grpc.UserServiceImpl;
+import pt.tecnico.distledger.server.grpc.ServerService;
 
 import java.io.IOException;
 
 public class ServerMain {
+
+    private static final ServerService serverService = new ServerService("localhost:5001");
 
     private static boolean DEBUG_FLAG = (System.getProperty("debug") != null);
 
@@ -44,6 +47,9 @@ public class ServerMain {
 
         // Server threads are running in the background.
         System.out.println("Server started");
+
+        // Register in namingServer
+        serverService.registerService("DistLedger", args[1], "localhost:" + args[0]);
 
         // Do not exit the main thread. Wait until server is terminated.
         server.awaitTermination();
