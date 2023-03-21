@@ -37,4 +37,13 @@ public class ServerService {
         DeleteResponse response = stub.delete(request);
         return response.toString();
     }
+
+    public String lookupService(String service, String qualifier) {
+        LookupRequest request = LookupRequest.newBuilder()
+                .setServiceName(service)
+                .setQualifier(qualifier)
+                .build();
+        LookupResponse response = stub.lookup(request);
+        return response.toString();
+    }
 }
