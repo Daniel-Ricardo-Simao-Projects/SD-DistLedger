@@ -3,7 +3,7 @@ package pt.tecnico.distledger.namingserver.grpc;
 
 import io.grpc.stub.StreamObserver;
 import pt.tecnico.distledger.namingserver.domain.NamingServerState;
-import pt.ulisboa.tecnico.distledger.contract.namingserver.NamingServerDistLedger;
+import pt.ulisboa.tecnico.distledger.contract.namingserver.NamingServerDistLedger.*;
 import pt.ulisboa.tecnico.distledger.contract.namingserver.NamingServerServiceGrpc;
 
 public class NamingServerServiceImpl extends NamingServerServiceGrpc.NamingServerServiceImplBase {
@@ -11,13 +11,25 @@ public class NamingServerServiceImpl extends NamingServerServiceGrpc.NamingServe
     private NamingServerState namingServerState = new NamingServerState();
 
     @Override
-    public void register(NamingServerDistLedger.RegisterRequest request, StreamObserver<NamingServerDistLedger.RegisterResponse> responseObserver) {
+    public void register(RegisterRequest request, StreamObserver<RegisterResponse> responseObserver) {
 
         boolean flag = namingServerState.register(request.getServiceName(), request.getQualifier(), request.getServerAddress());
 
         namingServerState.Print();
 
-        NamingServerDistLedger.RegisterResponse response = NamingServerDistLedger.RegisterResponse.newBuilder().build();
+        RegisterResponse response = RegisterResponse.newBuilder().build();
+
+        responseObserver.onNext(response);
+        responseObserver.onCompleted();
+    }
+
+    @Override
+    public void delete(DeleteRequest request, StreamObserver<DeleteResponse> responseObserver) {
+        boolean flag = namingServerState.delete(request.getServiceName(), request.getServerAddress());
+
+        namingServerState.Print();
+
+        DeleteResponse response = DeleteResponse.newBuilder().build();
 
         responseObserver.onNext(response);
         responseObserver.onCompleted();

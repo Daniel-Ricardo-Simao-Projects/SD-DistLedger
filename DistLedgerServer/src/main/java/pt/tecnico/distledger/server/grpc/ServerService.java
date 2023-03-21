@@ -2,7 +2,7 @@ package pt.tecnico.distledger.server.grpc;
 
 import io.grpc.ManagedChannel;
 import io.grpc.ManagedChannelBuilder;
-import pt.ulisboa.tecnico.distledger.contract.namingserver.NamingServerDistLedger;
+import pt.ulisboa.tecnico.distledger.contract.namingserver.NamingServerDistLedger.*;
 import pt.ulisboa.tecnico.distledger.contract.namingserver.NamingServerServiceGrpc;
 
 public class ServerService {
@@ -20,12 +20,21 @@ public class ServerService {
     }
 
     public String registerService(String service, String qualifier, String target) {
-        NamingServerDistLedger.RegisterRequest request = NamingServerDistLedger.RegisterRequest.newBuilder()
+        RegisterRequest request = RegisterRequest.newBuilder()
                 .setServiceName(service)
                 .setQualifier(qualifier)
                 .setServerAddress(target)
                 .build();
-        NamingServerDistLedger.RegisterResponse response = stub.register(request);
+        RegisterResponse response = stub.register(request);
+        return response.toString();
+    }
+
+    public String deleteService(String service, String target) {
+        DeleteRequest request = DeleteRequest.newBuilder()
+                .setServiceName(service)
+                .setServerAddress(target)
+                .build();
+        DeleteResponse response = stub.delete(request);
         return response.toString();
     }
 }

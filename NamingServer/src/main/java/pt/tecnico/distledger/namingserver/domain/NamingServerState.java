@@ -31,6 +31,18 @@ public class NamingServerState {
         return true;
     }
 
+    public Boolean delete(String service, String target) {
+        ServiceEntry serviceEntry = servicesMap.get(service);
+        for(ServerEntry se : serviceEntry.getServerEntries()) {
+            if(se.getTarget().equals(target)) {
+                serviceEntry.getServerEntries().remove(se);
+                return true;
+            }
+        }
+
+        return false;
+    }
+
     public void Print() {
         System.out.println(servicesMap.toString());
     }

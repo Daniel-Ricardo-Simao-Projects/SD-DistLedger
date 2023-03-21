@@ -10,6 +10,15 @@ message RegisterRequest {
 message RegisterResponse {
 }
 
+message DeleteRequest {
+  string serviceName = 1;
+  string serverAddress = 2;
+}
+
+message DeleteResponse {
+}
+
 service NamingServerService {
   rpc register(RegisterRequest) returns (RegisterResponse);
+  rpc delete(DeleteRequest) returns (DeleteResponse);
 }
