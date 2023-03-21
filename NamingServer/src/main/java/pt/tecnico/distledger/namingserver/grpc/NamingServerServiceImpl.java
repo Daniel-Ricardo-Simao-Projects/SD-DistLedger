@@ -15,8 +15,6 @@ public class NamingServerServiceImpl extends NamingServerServiceGrpc.NamingServe
 
         boolean flag = namingServerState.register(request.getServiceName(), request.getQualifier(), request.getServerAddress());
 
-        namingServerState.Print();
-
         RegisterResponse response = RegisterResponse.newBuilder().build();
 
         responseObserver.onNext(response);
@@ -26,8 +24,6 @@ public class NamingServerServiceImpl extends NamingServerServiceGrpc.NamingServe
     @Override
     public void delete(DeleteRequest request, StreamObserver<DeleteResponse> responseObserver) {
         boolean flag = namingServerState.delete(request.getServiceName(), request.getServerAddress());
-
-        namingServerState.Print();
 
         DeleteResponse response = DeleteResponse.newBuilder().build();
 

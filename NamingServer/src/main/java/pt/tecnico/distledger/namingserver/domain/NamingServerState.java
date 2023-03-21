@@ -1,49 +1,40 @@
 package pt.tecnico.distledger.namingserver.domain;
 
-import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.Optional;
 
 public class NamingServerState {
 
     private Map<String, ServiceEntry> servicesMap;
 
     public NamingServerState() {
-        this.servicesMap = new HashMap<String, ServiceEntry>();
+        this.servicesMap = new ConcurrentHashMap<>();
     }
 
-    public Boolean register(String service, String qualifier, String target) {
-        if(!servicesMap.containsKey(service)) {
-            ServiceEntry serviceEntry = new ServiceEntry(service);
-            ServerEntry serverEntry = new ServerEntry(target, qualifier);
-            serviceEntry.addServerEntry(serverEntry);
-            servicesMap.put(service, serviceEntry);
-        } else {
-            ServiceEntry serviceEntry = servicesMap.get(service);
-            for(ServerEntry se : serviceEntry.getServerEntries()) {
-                if(se.getQualifier().equals(qualifier)) {
-                    System.out.println("Ja existe");
-                    return false;
-                }
-            }
-            ServerEntry serverEntry = new ServerEntry(target, qualifier);
-            serviceEntry.addServerEntry(serverEntry);
+    public boolean register(String service, String qualifier, String target) {
+        servicesMap.putIfAbsent(service, new ServiceEntry(service));
+
+        ServiceEntry serviceEntry = servicesMap.get(service);
+        if (serviceEntry.getServerEntries().stream()
+                .anyMatch(se -> se.getQualifier().equals(qualifier))) {
+            return false;
         }
+
+        serviceEntry.addServerEntry(new ServerEntry(target, qualifier));
         return true;
     }
 
-    public Boolean delete(String service, String target) {
+    public boolean delete(String service, String target) {
         ServiceEntry serviceEntry = servicesMap.get(service);
-        for(ServerEntry se : serviceEntry.getServerEntries()) {
-            if(se.getTarget().equals(target)) {
-                serviceEntry.getServerEntries().remove(se);
-                return true;
-            }
+        Optional<ServerEntry> serverEntryOptional = serviceEntry.getServerEntries().stream()
+                .filter(se -> se.getTarget().equals(target))
+                .findFirst();
+        if (serverEntryOptional.isPresent()) {
+            serviceEntry.getServerEntries().remove(serverEntryOptional.get());
+            return true;
         }
-
         return false;
     }
 
-    public void Print() {
-        System.out.println(servicesMap.toString());
-    }
 }
