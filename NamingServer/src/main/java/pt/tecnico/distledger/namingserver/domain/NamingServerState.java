@@ -4,6 +4,8 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.Optional;
 
+import java.util.List;
+
 public class NamingServerState {
 
     private Map<String, ServiceEntry> servicesMap;
@@ -11,7 +13,6 @@ public class NamingServerState {
     public NamingServerState() {
         this.servicesMap = new ConcurrentHashMap<>();
     }
-
     public boolean register(String service, String qualifier, String target) {
         servicesMap.putIfAbsent(service, new ServiceEntry(service));
 
@@ -23,6 +24,12 @@ public class NamingServerState {
 
         serviceEntry.addServerEntry(new ServerEntry(target, qualifier));
         return true;
+    }
+
+    public List<ServerEntry> lookup(String service, String qualifier) {
+        return servicesMap.get(service).getServerEntries().stream()
+                .filter(serverEntry -> serverEntry.getQualifier().equals(qualifier) || qualifier.isEmpty())
+                .toList();
     }
 
     public boolean delete(String service, String target) {
