@@ -1,7 +1,9 @@
 package pt.tecnico.distledger.namingserver.domain;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 public class NamingServerState {
 
@@ -21,7 +23,7 @@ public class NamingServerState {
             ServiceEntry serviceEntry = servicesMap.get(service);
             for(ServerEntry se : serviceEntry.getServerEntries()) {
                 if(se.getQualifier().equals(qualifier)) {
-                    System.out.println("Ja existe");
+                    System.out.println("Already exists");
                     return false;
                 }
             }
@@ -41,6 +43,12 @@ public class NamingServerState {
         }
 
         return false;
+    }
+
+    public List<ServerEntry> lookup(String service, String qualifier) {
+        return servicesMap.get(service).getServerEntries().stream()
+                .filter(serverEntry -> serverEntry.getQualifier().equals(qualifier) || qualifier.isEmpty())
+                .toList();
     }
 
     public void Print() {

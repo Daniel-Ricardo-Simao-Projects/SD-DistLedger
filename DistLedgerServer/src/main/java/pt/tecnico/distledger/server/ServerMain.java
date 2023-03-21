@@ -51,6 +51,9 @@ public class ServerMain {
         // Register in namingServer
         serverService.registerService("DistLedger", args[1], "localhost:" + args[0]);
 
+        // TODO REMOVE
+        System.out.println(serverService.lookupService("DistLedger", ""));
+
         // Do not exit the main thread. Wait until server is terminated.
         server.awaitTermination();
     }
