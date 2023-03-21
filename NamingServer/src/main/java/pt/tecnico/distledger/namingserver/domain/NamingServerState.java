@@ -1,5 +1,9 @@
 package pt.tecnico.distledger.namingserver.domain;
 
+import pt.tecnico.distledger.namingserver.namingServerExceptions.NotPossibleToRemoveServerException;
+import pt.tecnico.distledger.namingserver.namingServerExceptions.QualifierAlreadyRegisteredException;
+import pt.tecnico.distledger.namingserver.namingServerExceptions.TargetAlreadyRegisteredException;
+
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.Optional;
@@ -13,17 +17,21 @@ public class NamingServerState {
     public NamingServerState() {
         this.servicesMap = new ConcurrentHashMap<>();
     }
-    public boolean register(String service, String qualifier, String target) {
+
+    public void register(String service, String qualifier, String target) throws QualifierAlreadyRegisteredException, TargetAlreadyRegisteredException {
         servicesMap.putIfAbsent(service, new ServiceEntry(service));
 
         ServiceEntry serviceEntry = servicesMap.get(service);
         if (serviceEntry.getServerEntries().stream()
                 .anyMatch(se -> se.getQualifier().equals(qualifier))) {
-            return false;
+            throw new QualifierAlreadyRegisteredException();
+        }
+        else if(serviceEntry.getServerEntries().stream()
+                .anyMatch(se -> se.getTarget().equals(target))) {
+            throw new TargetAlreadyRegisteredException();
         }
 
         serviceEntry.addServerEntry(new ServerEntry(target, qualifier));
-        return true;
     }
 
     public List<ServerEntry> lookup(String service, String qualifier) {
@@ -32,16 +40,17 @@ public class NamingServerState {
                 .toList();
     }
 
-    public boolean delete(String service, String target) {
+    public void delete(String service, String target) throws NotPossibleToRemoveServerException {
         ServiceEntry serviceEntry = servicesMap.get(service);
         Optional<ServerEntry> serverEntryOptional = serviceEntry.getServerEntries().stream()
                 .filter(se -> se.getTarget().equals(target))
                 .findFirst();
         if (serverEntryOptional.isPresent()) {
             serviceEntry.getServerEntries().remove(serverEntryOptional.get());
-            return true;
         }
-        return false;
+        else {
+            throw new NotPossibleToRemoveServerException();
+        }
     }
 
 }
