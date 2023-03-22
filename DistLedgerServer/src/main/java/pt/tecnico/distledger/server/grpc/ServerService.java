@@ -5,6 +5,8 @@ import io.grpc.ManagedChannelBuilder;
 import pt.ulisboa.tecnico.distledger.contract.namingserver.NamingServerDistLedger.*;
 import pt.ulisboa.tecnico.distledger.contract.namingserver.NamingServerServiceGrpc;
 
+import java.util.List;
+
 public class ServerService {
 
     private final ManagedChannel channel;
@@ -38,12 +40,12 @@ public class ServerService {
         return response.toString();
     }
 
-    public String lookupService(String service, String qualifier) {
+    public List<ServerEntry> lookupService(String service, String qualifier) {
         LookupRequest request = LookupRequest.newBuilder()
                 .setServiceName(service)
                 .setQualifier(qualifier)
                 .build();
         LookupResponse response = stub.lookup(request);
-        return response.toString();
+        return response.getServerListList();
     }
 }

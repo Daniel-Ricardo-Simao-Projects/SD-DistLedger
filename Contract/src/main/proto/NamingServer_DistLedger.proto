@@ -18,13 +18,18 @@ message DeleteRequest {
 message DeleteResponse {
 }
 
+message ServerEntry {
+  string target = 1;
+  string qualifier = 2;
+}
+
 message LookupRequest {
   string serviceName = 1;
   string qualifier = 2;
 }
 
 message LookupResponse {
-  repeated string serverList = 1;
+  repeated ServerEntry serverList = 1;
 }
 
 

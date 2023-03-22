@@ -1,5 +1,7 @@
 package pt.tecnico.distledger.namingserver.domain;
 
+import pt.ulisboa.tecnico.distledger.contract.namingserver.NamingServerDistLedger;
+
 public class ServerEntry {
 
     private String target;
@@ -25,6 +27,12 @@ public class ServerEntry {
 
     public void setQualifier(String qualifier) {
         this.qualifier = qualifier;
+    }
+
+    public NamingServerDistLedger.ServerEntry proto() {
+        return NamingServerDistLedger.ServerEntry.newBuilder()
+                .setQualifier(this.qualifier).setTarget(this.target)
+                .build();
     }
 
     @Override
