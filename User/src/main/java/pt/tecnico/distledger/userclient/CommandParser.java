@@ -61,7 +61,7 @@ public class CommandParser {
         String server = split[1];
         String username = split[2];
 
-        System.out.println(userService.createAccountService(username));
+        System.out.println(userService.createAccountService(username, server));
     }
 
     private void deleteAccount(String line){
@@ -74,7 +74,7 @@ public class CommandParser {
         String server = split[1];
         String username = split[2];
 
-        System.out.println(userService.deleteAccountService(username));
+        System.out.println(userService.deleteAccountService(username, server));
     }
 
     private void balance(String line){
@@ -87,7 +87,7 @@ public class CommandParser {
         String server = split[1];
         String username = split[2];
 
-        System.out.println(userService.getBalanceService(username));
+        System.out.println(userService.getBalanceService(username, server));
     }
 
     private void transferTo(String line){
@@ -102,7 +102,7 @@ public class CommandParser {
         String dest = split[3];
         Integer amount = Integer.valueOf(split[4]);
 
-        System.out.println(userService.transferToService(from, dest, amount));
+        System.out.println(userService.transferToService(from, dest, amount, server));
     }
 
     private void printUsage() {

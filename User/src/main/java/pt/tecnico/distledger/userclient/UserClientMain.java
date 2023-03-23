@@ -29,7 +29,7 @@ public class UserClientMain {
         final int port = Integer.parseInt(args[1]);
         final String target = host + ":" + port;
 
-        CommandParser parser = new CommandParser(new UserService(target, DEBUG_FLAG));
+        CommandParser parser = new CommandParser(new UserService(DEBUG_FLAG));
 
         parser.parseInput();
 

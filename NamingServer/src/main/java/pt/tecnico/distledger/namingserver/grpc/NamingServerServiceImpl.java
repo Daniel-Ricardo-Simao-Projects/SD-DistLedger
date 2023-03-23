@@ -54,10 +54,8 @@ public class NamingServerServiceImpl extends NamingServerServiceGrpc.NamingServe
     public void lookup(LookupRequest request, StreamObserver<LookupResponse> responseObserver) {
         List<ServerEntry> serverEntryList = namingServerState.lookup(request.getServiceName(), request.getQualifier());
 
-        //namingServerState.Print();
-
         LookupResponse response = LookupResponse.newBuilder()
-                .addAllServerList(serverEntryList.stream().map(ServerEntry::toString).toList())
+                .addAllServerList(serverEntryList.stream().map(ServerEntry::proto).toList())
                 .build();
 
         responseObserver.onNext(response);
