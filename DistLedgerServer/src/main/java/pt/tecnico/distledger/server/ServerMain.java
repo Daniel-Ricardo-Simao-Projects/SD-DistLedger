@@ -56,8 +56,11 @@ public class ServerMain {
         // TODO REMOVE
         System.out.println(serverService.lookupService("DistLedger", ""));
 
-        // Do not exit the main thread. Wait until server is terminated.
-        server.awaitTermination();
+        // Wait for shutdown
+        System.out.println("Press enter to shutdown");
+        System.in.read();
+        serverService.deleteService("DistLedger", "localhost:" + args[0]);
+        server.shutdown();
     }
 
 }
