@@ -5,6 +5,7 @@ import io.grpc.Server;
 import io.grpc.ServerBuilder;
 import pt.tecnico.distledger.server.domain.ServerState;
 import pt.tecnico.distledger.server.grpc.AdminServiceImpl;
+import pt.tecnico.distledger.server.grpc.ServerServiceImpl;
 import pt.tecnico.distledger.server.grpc.UserServiceImpl;
 import pt.tecnico.distledger.server.grpc.ServerService;
 
@@ -17,7 +18,7 @@ public class ServerMain {
     private static boolean DEBUG_FLAG = (System.getProperty("debug") != null);
 
     public static void main(String[] args) throws IOException, InterruptedException {
-        ServerState serverState = new ServerState();
+        ServerState serverState = new ServerState(serverService, args[1]);
 
         System.out.println(ServerMain.class.getSimpleName());
 
@@ -39,8 +40,9 @@ public class ServerMain {
         final int port = Integer.parseInt(args[0]);
         final BindableService userImpl = new UserServiceImpl(serverState, DEBUG_FLAG);
         final BindableService adminImpl = new AdminServiceImpl(serverState, DEBUG_FLAG);
+        final BindableService serverImpl = new ServerServiceImpl(serverState);
 
-        Server server = ServerBuilder.forPort(port).addService(userImpl).addService(adminImpl).build();
+        Server server = ServerBuilder.forPort(port).addService(userImpl).addService(adminImpl).addService(serverImpl).build();
 
         // Start the server
         server.start();

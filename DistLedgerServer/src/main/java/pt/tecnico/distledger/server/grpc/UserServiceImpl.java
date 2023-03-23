@@ -6,7 +6,6 @@ import pt.ulisboa.tecnico.distledger.contract.user.UserDistLedger;
 import pt.ulisboa.tecnico.distledger.contract.user.UserServiceGrpc;
 import pt.tecnico.distledger.server.domain.ServerState;
 import static io.grpc.Status.NOT_FOUND;
-import pt.tecnico.distledger.server.errors.ErrorCode;
 import java.util.logging.Logger;
 
 import static io.grpc.Status.*;
@@ -30,7 +29,7 @@ public class UserServiceImpl extends UserServiceGrpc.UserServiceImplBase {
         if (DEBUG_FLAG) logger.info("Received create account request with username " + request.getUserId());
 
         try {
-            serverState.createAccount(request.getUserId());
+            serverState.createAccount(request.getUserId(), false);
 
             UserDistLedger.CreateAccountResponse response = UserDistLedger.CreateAccountResponse.newBuilder().build();
             if (DEBUG_FLAG) logger.info("Sending create account response for user " + request.getUserId());
@@ -47,6 +46,10 @@ public class UserServiceImpl extends UserServiceGrpc.UserServiceImplBase {
             if (DEBUG_FLAG) logger.severe("Server unavailable");
 
             responseObserver.onError(UNAVAILABLE.withDescription(e.getMessage()).asRuntimeException());
+        } catch (WriteNotSupportedException e) {
+            if (DEBUG_FLAG) logger.severe("Server unavailable for writing");
+
+            responseObserver.onError(UNAVAILABLE.withDescription(e.getMessage()).asRuntimeException());
         }
     }
 
@@ -56,7 +59,7 @@ public class UserServiceImpl extends UserServiceGrpc.UserServiceImplBase {
         if (DEBUG_FLAG) logger.info("Received delete account request of user " + request.getUserId());
 
         try {
-            serverState.deleteAccount(request.getUserId());
+            serverState.deleteAccount(request.getUserId(), false);
 
             UserDistLedger.DeleteAccountResponse response = UserDistLedger.DeleteAccountResponse.newBuilder().build();
             if (DEBUG_FLAG) logger.info("Sending delete account response for user " + request.getUserId());
@@ -81,6 +84,10 @@ public class UserServiceImpl extends UserServiceGrpc.UserServiceImplBase {
 
         } catch (ServerUnavailableException e) {
             if (DEBUG_FLAG) logger.severe("Server unavailable");
+
+            responseObserver.onError(UNAVAILABLE.withDescription(e.getMessage()).asRuntimeException());
+        } catch (WriteNotSupportedException e) {
+            if (DEBUG_FLAG) logger.severe("Server unavailable for writing");
 
             responseObserver.onError(UNAVAILABLE.withDescription(e.getMessage()).asRuntimeException());
         }
@@ -120,7 +127,7 @@ public class UserServiceImpl extends UserServiceGrpc.UserServiceImplBase {
                     " to user " + request.getAccountTo());
 
         try {
-            serverState.transferTo(request.getAccountFrom(), request.getAccountTo(), request.getAmount());
+            serverState.transferTo(request.getAccountFrom(), request.getAccountTo(), request.getAmount(), false);
 
             UserDistLedger.TransferToResponse response = UserDistLedger.TransferToResponse.newBuilder().build();
             if (DEBUG_FLAG) {
@@ -162,6 +169,10 @@ public class UserServiceImpl extends UserServiceGrpc.UserServiceImplBase {
 
         } catch (ServerUnavailableException e) {
             if (DEBUG_FLAG) logger.severe("Server unavailable");
+
+            responseObserver.onError(UNAVAILABLE.withDescription(e.getMessage()).asRuntimeException());
+        } catch (WriteNotSupportedException e) {
+            if (DEBUG_FLAG) logger.severe("Server unavailable for writing");
 
             responseObserver.onError(UNAVAILABLE.withDescription(e.getMessage()).asRuntimeException());
         }

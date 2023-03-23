@@ -2,9 +2,16 @@ package pt.tecnico.distledger.server.grpc;
 
 import io.grpc.ManagedChannel;
 import io.grpc.ManagedChannelBuilder;
+import io.grpc.StatusRuntimeException;
+import pt.tecnico.distledger.server.domain.operation.DistLedgerOperationVisitor;
+import pt.tecnico.distledger.server.domain.operation.Operation;
+import pt.ulisboa.tecnico.distledger.contract.DistLedgerCommonDefinitions;
+import pt.ulisboa.tecnico.distledger.contract.distledgerserver.CrossServerDistLedger;
+import pt.ulisboa.tecnico.distledger.contract.distledgerserver.DistLedgerCrossServerServiceGrpc;
 import pt.ulisboa.tecnico.distledger.contract.namingserver.NamingServerDistLedger.*;
 import pt.ulisboa.tecnico.distledger.contract.namingserver.NamingServerServiceGrpc;
 
+import java.util.ArrayList;
 import java.util.List;
 
 public class ServerService {
@@ -48,4 +55,39 @@ public class ServerService {
         LookupResponse response = stub.lookup(request);
         return response.getServerListList();
     }
+
+    public boolean propagateStateService(Operation operation) {
+        ManagedChannel serverChannel;
+        DistLedgerCrossServerServiceGrpc.DistLedgerCrossServerServiceBlockingStub serverStub;
+
+        // Creating LedgerState object
+        DistLedgerOperationVisitor visitor = new DistLedgerOperationVisitor();
+        operation.accept(visitor);
+        List<DistLedgerCommonDefinitions.Operation> distLedgerOperations = visitor.getDistLedgerOperations();
+        DistLedgerCommonDefinitions.LedgerState ledgerState = DistLedgerCommonDefinitions.LedgerState.newBuilder().addAllLedger(distLedgerOperations).build();
+        CrossServerDistLedger.PropagateStateRequest request = CrossServerDistLedger.PropagateStateRequest.newBuilder()
+                .setState(ledgerState)
+                .build();
+
+        // Look for servers to propagate the operation
+        List<ServerEntry> serverEntries = new ArrayList<>();
+        serverEntries.addAll(this.lookupService("DistLedger", ""));
+
+        // Propagate the operation to every server found
+        for(ServerEntry se : serverEntries) {
+            if(!se.getQualifier().equals("A")) {
+                serverChannel = ManagedChannelBuilder.forTarget(se.getTarget()).usePlaintext().build();
+                serverStub = DistLedgerCrossServerServiceGrpc.newBlockingStub(serverChannel);
+                try {
+                    CrossServerDistLedger.PropagateStateResponse response = serverStub.propagateState(request);
+                } catch (StatusRuntimeException e) {
+                    return false;
+                }
+
+                serverChannel.shutdownNow();
+            }
+        }
+        return true;
+    }
+
 }
