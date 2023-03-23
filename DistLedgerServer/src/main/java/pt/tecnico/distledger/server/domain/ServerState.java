@@ -34,7 +34,8 @@ public class ServerState {
         this.serverService = serverService;
     }
 
-    public synchronized void createAccount(String userId, boolean isPropagation) throws AccountAlreadyExistsException, ServerUnavailableException, WriteNotSupportedException {
+    public synchronized void createAccount(String userId, boolean isPropagation) throws AccountAlreadyExistsException,
+            ServerUnavailableException, WriteNotSupportedException, CouldNotPropagateException {
         if(qualifier.equals("B") && !isPropagation) {
             throw new WriteNotSupportedException();
         }
@@ -46,7 +47,7 @@ public class ServerState {
         CreateOp createOp = new CreateOp(userId);
         if(qualifier.equals("A") && !isPropagation) {
             if (!serverService.propagateStateService(createOp)) {
-                throw new ServerUnavailableException();
+                throw new CouldNotPropagateException();
             }
         }
 
@@ -54,7 +55,7 @@ public class ServerState {
         ledger.add(createOp);
     }
 
-    public synchronized void deleteAccount(String userId, boolean isPropagation) throws BalanceIsntZeroException, AccountDoesntExistException, CannotRemoveBrokerException, ServerUnavailableException, WriteNotSupportedException {
+    public synchronized void deleteAccount(String userId, boolean isPropagation) throws BalanceIsntZeroException, AccountDoesntExistException, CannotRemoveBrokerException, ServerUnavailableException, WriteNotSupportedException, CouldNotPropagateException {
         if(qualifier.equals("B") && !isPropagation) {
             throw new WriteNotSupportedException();
         }
@@ -71,7 +72,7 @@ public class ServerState {
             DeleteOp deleteOp = new DeleteOp(userId);
             if(qualifier.equals("A") && !isPropagation) {
                 if(!serverService.propagateStateService(deleteOp)) {
-                    throw new ServerUnavailableException();
+                    throw new CouldNotPropagateException();
                 }
             }
 
@@ -90,7 +91,7 @@ public class ServerState {
         return balance;
     }
 
-    public synchronized void transferTo(String userId, String destAccount, int amount, boolean isPropagation) throws ServerUnavailableException, DestAccountEqualToFromAccountException, AccountDoesntExistException, DestAccountDoesntExistException, AmountIsZeroException, TransferBiggerThanBalanceException, NegativeBalanceException, WriteNotSupportedException {
+    public synchronized void transferTo(String userId, String destAccount, int amount, boolean isPropagation) throws ServerUnavailableException, DestAccountEqualToFromAccountException, AccountDoesntExistException, DestAccountDoesntExistException, AmountIsZeroException, TransferBiggerThanBalanceException, NegativeBalanceException, WriteNotSupportedException, CouldNotPropagateException {
         if(qualifier.equals("B") && !isPropagation) {
             throw new WriteNotSupportedException();
         }
@@ -110,7 +111,7 @@ public class ServerState {
         TransferOp transferOp = new TransferOp(userId, destAccount, amount);
         if(qualifier.equals("A") && !isPropagation) {
             if(!serverService.propagateStateService(transferOp)) {
-                throw new ServerUnavailableException();
+                throw new CouldNotPropagateException();
             }
         }
 
