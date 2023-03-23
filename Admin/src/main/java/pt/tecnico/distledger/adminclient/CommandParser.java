@@ -54,7 +54,7 @@ public class CommandParser {
         }
         String server = split[1];
 
-        System.out.println(adminService.activateServer());
+        System.out.println(adminService.activateServer(server));
     }
 
     private void deactivate(String line){
@@ -66,7 +66,7 @@ public class CommandParser {
         }
         String server = split[1];
 
-        System.out.println(adminService.deactivateServer());
+        System.out.println(adminService.deactivateServer(server));
     }
 
     private void dump(String line){
@@ -78,7 +78,7 @@ public class CommandParser {
         }
         String server = split[1];
 
-        System.out.println(adminService.getLedgerState());
+        System.out.println(adminService.getLedgerState(server));
     }
 
     @SuppressWarnings("unused")
