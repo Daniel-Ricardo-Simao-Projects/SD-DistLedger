@@ -50,6 +50,8 @@ public class UserServiceImpl extends UserServiceGrpc.UserServiceImplBase {
             if (DEBUG_FLAG) logger.severe("Server unavailable for writing");
 
             responseObserver.onError(UNAVAILABLE.withDescription(e.getMessage()).asRuntimeException());
+        } catch (CouldNotPropagateException e) {
+            responseObserver.onError(UNAVAILABLE.withDescription(e.getMessage()).asRuntimeException());
         }
     }
 
@@ -89,6 +91,8 @@ public class UserServiceImpl extends UserServiceGrpc.UserServiceImplBase {
         } catch (WriteNotSupportedException e) {
             if (DEBUG_FLAG) logger.severe("Server unavailable for writing");
 
+            responseObserver.onError(UNAVAILABLE.withDescription(e.getMessage()).asRuntimeException());
+        } catch (CouldNotPropagateException e) {
             responseObserver.onError(UNAVAILABLE.withDescription(e.getMessage()).asRuntimeException());
         }
     }
@@ -174,6 +178,8 @@ public class UserServiceImpl extends UserServiceGrpc.UserServiceImplBase {
         } catch (WriteNotSupportedException e) {
             if (DEBUG_FLAG) logger.severe("Server unavailable for writing");
 
+            responseObserver.onError(UNAVAILABLE.withDescription(e.getMessage()).asRuntimeException());
+        } catch (CouldNotPropagateException e) {
             responseObserver.onError(UNAVAILABLE.withDescription(e.getMessage()).asRuntimeException());
         }
     }

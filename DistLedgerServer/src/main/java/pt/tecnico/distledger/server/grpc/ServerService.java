@@ -73,6 +73,10 @@ public class ServerService {
         List<ServerEntry> serverEntries = new ArrayList<>();
         serverEntries.addAll(this.lookupService("DistLedger", ""));
 
+        if(serverEntries.size()==1) {
+            return false;
+        }
+
         // Propagate the operation to every server found
         for(ServerEntry se : serverEntries) {
             if(!se.getQualifier().equals("A")) {

@@ -49,7 +49,7 @@ public class ServerServiceImpl extends DistLedgerCrossServerServiceGrpc.DistLedg
             responseObserver.onError(ALREADY_EXISTS.withDescription(e.getMessage()).asRuntimeException());
         } catch (ServerUnavailableException e) {
             responseObserver.onError(UNAVAILABLE.withDescription(e.getMessage()).asRuntimeException());
-        } catch (WriteNotSupportedException e) {
+        } catch (WriteNotSupportedException | CouldNotPropagateException e) {
             responseObserver.onError(UNAVAILABLE.withDescription(e.getMessage()).asRuntimeException());
         } catch (AccountDoesntExistException e) {
             responseObserver.onError(NOT_FOUND.withDescription(e.getMessage()).asRuntimeException());
