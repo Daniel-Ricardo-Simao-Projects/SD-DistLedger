@@ -8,7 +8,9 @@ import pt.ulisboa.tecnico.distledger.contract.admin.AdminDistLedger;
 import pt.ulisboa.tecnico.distledger.contract.admin.AdminServiceGrpc;
 import pt.ulisboa.tecnico.distledger.contract.namingserver.NamingServerServiceGrpc;
 import pt.ulisboa.tecnico.distledger.contract.namingserver.NamingServerDistLedger;
+import pt.tecnico.distledger.adminclient.AdminExceptions.NoServerAvailableException;
 
+import javax.swing.plaf.synth.SynthTextAreaUI;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.logging.Logger;
@@ -53,7 +55,7 @@ public class AdminService {
         return newStub;
     }
 
-    public AdminServiceGrpc.AdminServiceBlockingStub lookupService(String qualifier) {
+    public AdminServiceGrpc.AdminServiceBlockingStub lookupService(String qualifier) throws NoServerAvailableException {
         NamingServerDistLedger.LookupRequest request = NamingServerDistLedger.LookupRequest
                 .newBuilder()
                 .setServiceName("DistLedger") //TODO: Change hardcode service name (?)
@@ -63,14 +65,12 @@ public class AdminService {
         NamingServerDistLedger.LookupResponse response = namingServerStub.lookup(request);
 
         if (response.getServerListList().isEmpty()) {
-            // TODO throw exception
+            throw new NoServerAvailableException();
         }
         else {
             AdminServiceGrpc.AdminServiceBlockingStub stub = addStub(response.getServerList(0));
             return stub;
         }
-
-        return null;
     }
 
     public void closeChannel() {
@@ -99,18 +99,21 @@ public class AdminService {
                         AdminDistLedger.ActivateResponse response = stub.activate(request);
                         return "OK\n";
                     }
-                    catch (Exception lookUpException) {
-                        // TODO Exception of lookupService
+                    catch (NoServerAvailableException exp) {
+                        return "Caught exception with description: " + exp.getMessage() + "\n";
                     }
-                } else {
-                    // TODO maybe do some other errors handling (?)
                 }
             }
         } else {
-            stub = lookupService(serverQualifier);
-            AdminDistLedger.ActivateRequest request = AdminDistLedger.ActivateRequest.newBuilder().build();
-            AdminDistLedger.ActivateResponse response = stub.activate(request);
-            return "OK\n";
+            try {
+                stub = lookupService(serverQualifier);
+                AdminDistLedger.ActivateRequest request = AdminDistLedger.ActivateRequest.newBuilder().build();
+                AdminDistLedger.ActivateResponse response = stub.activate(request);
+                return "OK\n";
+            }
+            catch (NoServerAvailableException exp) {
+                return "Caught exception with description: " + exp.getMessage() + "\n";
+            }
         }
         return "";
     }
@@ -131,18 +134,21 @@ public class AdminService {
                         AdminDistLedger.DeactivateResponse response = stub.deactivate(request);
                         return "OK\n";
                     }
-                    catch (Exception lookUpException) {
-                        // TODO Exception of lookupService
+                    catch (NoServerAvailableException exp) {
+                        return "Caught exception with description: " + exp.getMessage() + "\n";
                     }
-                } else {
-                    // TODO maybe do some other errors handling (?)
                 }
             }
         } else {
-            stub = lookupService(serverQualifier);
-            AdminDistLedger.DeactivateRequest request = AdminDistLedger.DeactivateRequest.newBuilder().build();
-            AdminDistLedger.DeactivateResponse response = stub.deactivate(request);
-            return "OK\n";
+            try {
+                stub = lookupService(serverQualifier);
+                AdminDistLedger.DeactivateRequest request = AdminDistLedger.DeactivateRequest.newBuilder().build();
+                AdminDistLedger.DeactivateResponse response = stub.deactivate(request);
+                return "OK\n";
+            }
+            catch (NoServerAvailableException exp) {
+                return "Caught exception with description: " + exp.getMessage() + "\n";
+            }
         }
         return "";
     }
@@ -163,18 +169,21 @@ public class AdminService {
                         AdminDistLedger.getLedgerStateResponse response = stub.getLedgerState(request);
                         return "OK\n" + response.toString();
                     }
-                    catch (Exception lookUpException) {
-                        // TODO Exception of lookupService
+                    catch (NoServerAvailableException exp) {
+                        return "Caught exception with description: " + exp.getMessage() + "\n";
                     }
-                } else {
-                    // TODO maybe do some other errors handling (?)
                 }
             }
         } else {
-            stub = lookupService(serverQualifier);
-            AdminDistLedger.getLedgerStateRequest request = AdminDistLedger.getLedgerStateRequest.newBuilder().build();
-            AdminDistLedger.getLedgerStateResponse response = stub.getLedgerState(request);
-            return "OK\n" + response.toString();
+            try {
+                stub = lookupService(serverQualifier);
+                AdminDistLedger.getLedgerStateRequest request = AdminDistLedger.getLedgerStateRequest.newBuilder().build();
+                AdminDistLedger.getLedgerStateResponse response = stub.getLedgerState(request);
+                return "OK\n" + response.toString();
+            }
+            catch (NoServerAvailableException exp) {
+                return "Caught exception with description: " + exp.getMessage() + "\n";
+            }
         }
         return "";
     }
