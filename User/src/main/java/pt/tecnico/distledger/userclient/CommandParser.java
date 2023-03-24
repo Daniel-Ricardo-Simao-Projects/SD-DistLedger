@@ -47,7 +47,7 @@ public class CommandParser {
             }
         }
 
-        userService.closeChannel();
+        userService.closeAllChannels();
     }
 
     private void createAccount(String line){
