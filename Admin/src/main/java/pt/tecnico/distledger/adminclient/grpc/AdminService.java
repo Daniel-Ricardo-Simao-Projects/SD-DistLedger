@@ -24,7 +24,7 @@ public class AdminService {
 
     private Map<String, AdminServiceGrpc.AdminServiceBlockingStub> stubCache;
 
-    private List<ManagedChannel> channelCache;
+    private Map<String, ManagedChannel> channelCache;
 
     private static final String namingServerTarget = "localhost:5001";
 
@@ -40,22 +40,29 @@ public class AdminService {
         AdminService.DEBUG_FLAG = DEBUG_FLAG;
 
         this.stubCache = new HashMap<>();
-        this.channelCache = new ArrayList<>();
+        this.channelCache = new HashMap<>();
 
         ManagedChannel channel = ManagedChannelBuilder.forTarget(namingServerTarget).usePlaintext().build();
         debug("channel created: " + channel.toString());
-        channelCache.add(channel);
+        channelCache.put("NamingServer", channel);
 
         this.namingServerStub = NamingServerServiceGrpc.newBlockingStub(channel);
         debug("stub created" + namingServerStub.toString());
     }
 
     public AdminServiceGrpc.AdminServiceBlockingStub addStub(NamingServerDistLedger.ServerEntry serverEntry) {
-        ManagedChannel channel = ManagedChannelBuilder.forTarget(serverEntry.getTarget()).usePlaintext().build();
-        debug("channel created: " + channel.toString());
-        channelCache.add(channel);
+        ManagedChannel newChannel = ManagedChannelBuilder.forTarget(serverEntry.getTarget()).usePlaintext().build();
+        debug("channel created: " + newChannel.toString());
 
-        AdminServiceGrpc.AdminServiceBlockingStub newStub = AdminServiceGrpc.newBlockingStub(channel);
+        ManagedChannel channel = channelCache.get(serverEntry.getQualifier());
+        if (channel != null) {
+            channel.shutdownNow();
+            channelCache.remove(channel);
+        }
+
+        channelCache.put(serverEntry.getQualifier(), newChannel);
+
+        AdminServiceGrpc.AdminServiceBlockingStub newStub = AdminServiceGrpc.newBlockingStub(newChannel);
         debug("stub created" + newStub.toString());
 
         stubCache.put(serverEntry.getQualifier(), newStub);
@@ -89,9 +96,12 @@ public class AdminService {
     }
 
     public void closeAllChannels() {
-        channelCache.forEach(ManagedChannel::shutdownNow);
+        channelCache.forEach((namingServer, channel) -> {
+            channel.shutdownNow();
+        });
+        channelCache.clear();
 
-        debug("channel shutdown");
+        debug("All channels shutdown");
     }
 
     public String activateServer(String serverQualifier) {

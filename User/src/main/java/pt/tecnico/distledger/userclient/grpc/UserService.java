@@ -21,7 +21,7 @@ public class UserService {
 
     private Map<String, UserServiceGrpc.UserServiceBlockingStub> stubCache;
 
-    private List<ManagedChannel> channelCache;
+    private Map<String, ManagedChannel> channelCache;
 
     private static final String namingServerTarget = "localhost:5001";
 
@@ -35,11 +35,11 @@ public class UserService {
         UserService.DEBUG_FLAG = DEBUG_FLAG;
 
         this.stubCache = new HashMap<>();
-        this.channelCache = new ArrayList<>();
+        this.channelCache = new HashMap<>();
 
         ManagedChannel channel = ManagedChannelBuilder.forTarget(namingServerTarget).usePlaintext().build();
         debug("naming channel created: " + channel.toString());
-        channelCache.add(channel);
+        channelCache.put("NamingServer", channel);
 
         this.namingServerStub = NamingServerServiceGrpc.newBlockingStub(channel);
         debug("naming stub created: " + namingServerStub.toString());
@@ -47,11 +47,18 @@ public class UserService {
     }
 
     public UserServiceGrpc.UserServiceBlockingStub addStub(NamingServerDistLedger.ServerEntry serverEntry) {
-        ManagedChannel channel = ManagedChannelBuilder.forTarget(serverEntry.getTarget()).usePlaintext().build();
-        debug("addStub - channel created: " + channel.toString());
-        channelCache.add(channel);
+        ManagedChannel newChannel = ManagedChannelBuilder.forTarget(serverEntry.getTarget()).usePlaintext().build();
+        debug("addStub - channel created: " + newChannel.toString());
 
-        UserServiceGrpc.UserServiceBlockingStub newStub = UserServiceGrpc.newBlockingStub(channel);
+        ManagedChannel channel = channelCache.get(serverEntry.getQualifier());
+        if (channel != null) {
+            channel.shutdownNow();
+            channelCache.remove(channel);
+        }
+
+        channelCache.put(serverEntry.getQualifier(), newChannel);
+
+        UserServiceGrpc.UserServiceBlockingStub newStub = UserServiceGrpc.newBlockingStub(newChannel);
         debug("addStub - stub created" + newStub.toString());
 
         stubCache.put(serverEntry.getQualifier(), newStub);
@@ -85,9 +92,12 @@ public class UserService {
     }
 
     public void closeAllChannels() {
-        channelCache.forEach(ManagedChannel::shutdownNow);
+        channelCache.forEach((namingServer, channel) -> {
+            channel.shutdownNow();
+        });
+        channelCache.clear();
 
-        debug("channel shutdown");
+        debug("All channels shutdown");
     }
 
     public String createAccountService(String username, String serverQualifier) {
