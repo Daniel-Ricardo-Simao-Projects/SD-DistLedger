@@ -4,7 +4,7 @@ import io.grpc.ManagedChannel;
 import io.grpc.ManagedChannelBuilder;
 import io.grpc.Status;
 import io.grpc.StatusRuntimeException;
-import pt.tecnico.distledger.userclient.UserExceptions.NoServerAvailableException;
+import pt.tecnico.distledger.userclient.userExceptions.NoServerAvailableException;
 import pt.ulisboa.tecnico.distledger.contract.namingserver.NamingServerDistLedger;
 import pt.ulisboa.tecnico.distledger.contract.namingserver.NamingServerServiceGrpc;
 import pt.ulisboa.tecnico.distledger.contract.user.UserDistLedger;

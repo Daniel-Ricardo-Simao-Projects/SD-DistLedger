@@ -1,31 +1,39 @@
 package pt.tecnico.distledger.server.grpc;
 
-import io.grpc.ManagedChannel;
-import io.grpc.ManagedChannelBuilder;
-import io.grpc.StatusRuntimeException;
+import io.grpc.*;
 import pt.tecnico.distledger.server.domain.operation.DistLedgerOperationVisitor;
 import pt.tecnico.distledger.server.domain.operation.Operation;
+import pt.tecnico.distledger.server.serverExceptions.NoServerAvailableException;
 import pt.ulisboa.tecnico.distledger.contract.DistLedgerCommonDefinitions;
 import pt.ulisboa.tecnico.distledger.contract.distledgerserver.CrossServerDistLedger;
 import pt.ulisboa.tecnico.distledger.contract.distledgerserver.DistLedgerCrossServerServiceGrpc;
+import pt.ulisboa.tecnico.distledger.contract.namingserver.NamingServerDistLedger;
 import pt.ulisboa.tecnico.distledger.contract.namingserver.NamingServerDistLedger.*;
 import pt.ulisboa.tecnico.distledger.contract.namingserver.NamingServerServiceGrpc;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 public class ServerService {
 
-    private final ManagedChannel channel;
+    private final ManagedChannel namingChannel;
 
-    private final NamingServerServiceGrpc.NamingServerServiceBlockingStub stub;
+    private Map<String, DistLedgerCrossServerServiceGrpc.DistLedgerCrossServerServiceBlockingStub> stubCache;
+    private List<ManagedChannel> channelCache;
+
+    private final NamingServerServiceGrpc.NamingServerServiceBlockingStub namingServerStub;
+
     public ServerService(String target) {
-        channel = ManagedChannelBuilder.forTarget(target).usePlaintext().build();
-        stub = NamingServerServiceGrpc.newBlockingStub(channel);
+        namingChannel = ManagedChannelBuilder.forTarget(target).usePlaintext().build();
+        namingServerStub = NamingServerServiceGrpc.newBlockingStub(namingChannel);
+        this.stubCache = new HashMap<>();
+        this.channelCache = new ArrayList<>();
     }
 
     public void closeChannel() {
-        this.channel.shutdownNow();
+        this.namingChannel.shutdownNow();
     }
 
     public String registerService(String service, String qualifier, String target) {
@@ -34,7 +42,7 @@ public class ServerService {
                 .setQualifier(qualifier)
                 .setServerAddress(target)
                 .build();
-        RegisterResponse response = stub.register(request);
+        RegisterResponse response = namingServerStub.register(request);
         return response.toString();
     }
 
@@ -43,19 +51,31 @@ public class ServerService {
                 .setServiceName(service)
                 .setServerAddress(target)
                 .build();
-        DeleteResponse response = stub.delete(request);
-        ManagedChannel channel = (ManagedChannel) stub.getChannel();
+        DeleteResponse response = namingServerStub.delete(request);
+
+        channelCache.forEach(ManagedChannel::shutdownNow);
+        channelCache.clear();
+
+        ManagedChannel channel = (ManagedChannel) namingServerStub.getChannel();
         channel.shutdownNow();
         return response.toString();
     }
 
-    public List<ServerEntry> lookupService(String service, String qualifier) {
+    public DistLedgerCrossServerServiceGrpc.DistLedgerCrossServerServiceBlockingStub lookupService(String service, String qualifier)
+            throws NoServerAvailableException {
         LookupRequest request = LookupRequest.newBuilder()
                 .setServiceName(service)
                 .setQualifier(qualifier)
                 .build();
-        LookupResponse response = stub.lookup(request);
-        return response.getServerListList();
+        LookupResponse response = namingServerStub.lookup(request);
+
+        if (response.getServerListList().isEmpty()) {
+            throw new NoServerAvailableException();
+        }
+        else {
+            DistLedgerCrossServerServiceGrpc.DistLedgerCrossServerServiceBlockingStub stub = addStub(response.getServerList(0));
+            return stub;
+        }
     }
 
     public boolean propagateStateService(Operation operation) {
@@ -71,29 +91,52 @@ public class ServerService {
                 .setState(ledgerState)
                 .build();
 
-        // Look for servers to propagate the operation
-        List<ServerEntry> serverEntries = new ArrayList<>();
-        serverEntries.addAll(this.lookupService("DistLedger", ""));
-
-        if(serverEntries.size()==1) {
+        // Propagate the operation to every server found
+        try {
+            serverStub = getStub("B");
+            CrossServerDistLedger.PropagateStateResponse response = serverStub.propagateState(request);
+        } catch (StatusRuntimeException e) {
+            if (e.getStatus().getDescription().equals("UNAVAILABLE")) return false;
+            else if (e.getStatus().getCode() == Status.UNAVAILABLE.getCode()) {
+                try {
+                    serverStub = lookupService("DistLedger", "B");
+                    CrossServerDistLedger.PropagateStateResponse response = serverStub.propagateState(request);
+                } catch (NoServerAvailableException exp) {
+                    return false;
+                }
+            }
+        } catch (NoServerAvailableException exp) {
             return false;
         }
 
-        // Propagate the operation to every server found
-        for(ServerEntry se : serverEntries) {
-            if(!se.getQualifier().equals("A")) {
-                serverChannel = ManagedChannelBuilder.forTarget(se.getTarget()).usePlaintext().build();
-                serverStub = DistLedgerCrossServerServiceGrpc.newBlockingStub(serverChannel);
-                try {
-                    CrossServerDistLedger.PropagateStateResponse response = serverStub.propagateState(request);
-                } catch (StatusRuntimeException e) {
-                    return false;
-                }
-
-                serverChannel.shutdownNow();
-            }
-        }
         return true;
     }
 
+
+    private DistLedgerCrossServerServiceGrpc.DistLedgerCrossServerServiceBlockingStub getStub(String serverQualifier) throws NoServerAvailableException {
+        DistLedgerCrossServerServiceGrpc.DistLedgerCrossServerServiceBlockingStub stub = stubCache.get(serverQualifier);
+        if (stub == null) {
+            try {
+                stub = lookupService("DistLedger", serverQualifier);
+            } catch (NoServerAvailableException e) {
+                throw e;
+            }
+            stubCache.put(serverQualifier, stub);
+        }
+        return stub;
+    }
+
+    public DistLedgerCrossServerServiceGrpc.DistLedgerCrossServerServiceBlockingStub addStub(NamingServerDistLedger.ServerEntry serverEntry) {
+        ManagedChannel channel = ManagedChannelBuilder.forTarget(serverEntry.getTarget()).usePlaintext().build();
+        //debug("channel created: " + channel.toString());
+
+        DistLedgerCrossServerServiceGrpc.DistLedgerCrossServerServiceBlockingStub newStub = DistLedgerCrossServerServiceGrpc.newBlockingStub(channel);
+
+        //debug("stub created" + newStub.toString());
+
+        stubCache.put(serverEntry.getQualifier(), newStub);
+        channelCache.add(channel);
+
+        return newStub;
+    }
 }

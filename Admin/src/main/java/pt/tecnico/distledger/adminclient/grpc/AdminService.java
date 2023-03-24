@@ -8,7 +8,7 @@ import pt.ulisboa.tecnico.distledger.contract.admin.AdminDistLedger;
 import pt.ulisboa.tecnico.distledger.contract.admin.AdminServiceGrpc;
 import pt.ulisboa.tecnico.distledger.contract.namingserver.NamingServerServiceGrpc;
 import pt.ulisboa.tecnico.distledger.contract.namingserver.NamingServerDistLedger;
-import pt.tecnico.distledger.adminclient.AdminExceptions.NoServerAvailableException;
+import pt.tecnico.distledger.adminclient.adminExceptions.NoServerAvailableException;
 
 import java.util.HashMap;
 import java.util.Map;

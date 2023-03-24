@@ -1,4 +1,4 @@
-package pt.tecnico.distledger.adminclient.AdminExceptions;
+package pt.tecnico.distledger.adminclient.adminExceptions;
 
 public class NoServerAvailableException extends Exception {
 
