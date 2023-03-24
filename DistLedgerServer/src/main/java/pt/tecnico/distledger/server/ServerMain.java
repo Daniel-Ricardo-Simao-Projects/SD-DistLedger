@@ -13,9 +13,9 @@ import java.io.IOException;
 
 public class ServerMain {
 
-    private static final ServerService serverService = new ServerService("localhost:5001");
-
     private static final boolean DEBUG_FLAG = (System.getProperty("debug") != null);
+
+    private static final ServerService serverService = new ServerService("localhost:5001", DEBUG_FLAG);
 
     public static void main(String[] args) throws IOException, InterruptedException {
         ServerState serverState = new ServerState(serverService, args[1]);

@@ -11,25 +11,35 @@ import pt.ulisboa.tecnico.distledger.contract.namingserver.NamingServerDistLedge
 import pt.ulisboa.tecnico.distledger.contract.namingserver.NamingServerDistLedger.*;
 import pt.ulisboa.tecnico.distledger.contract.namingserver.NamingServerServiceGrpc;
 
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.logging.Logger;
 
 public class ServerService {
 
     private final ManagedChannel namingChannel;
 
     private Map<String, DistLedgerCrossServerServiceGrpc.DistLedgerCrossServerServiceBlockingStub> stubCache;
-    private List<ManagedChannel> channelCache;
+    private Map<String, ManagedChannel> channelCache;
 
     private final NamingServerServiceGrpc.NamingServerServiceBlockingStub namingServerStub;
 
-    public ServerService(String target) {
+    private static boolean DEBUG_FLAG;
+
+    private static final Logger logger = Logger.getLogger(UserServiceImpl.class.getName());
+
+    private static void debug(String debugMessage) {
+        if (DEBUG_FLAG)
+            logger.info(debugMessage);
+    }
+
+    public ServerService(String target, final boolean DEBUG_FLAG) {
         namingChannel = ManagedChannelBuilder.forTarget(target).usePlaintext().build();
         namingServerStub = NamingServerServiceGrpc.newBlockingStub(namingChannel);
         this.stubCache = new HashMap<>();
-        this.channelCache = new ArrayList<>();
+        this.channelCache = new HashMap<>();
+        this.DEBUG_FLAG = DEBUG_FLAG;
     }
 
     public void closeChannel() {
@@ -53,7 +63,9 @@ public class ServerService {
                 .build();
         DeleteResponse response = namingServerStub.delete(request);
 
-        channelCache.forEach(ManagedChannel::shutdownNow);
+        channelCache.forEach((s, channel) -> {
+            channel.shutdownNow();
+        });
         channelCache.clear();
 
         ManagedChannel channel = (ManagedChannel) namingServerStub.getChannel();
@@ -96,8 +108,12 @@ public class ServerService {
             serverStub = getStub("B");
             CrossServerDistLedger.PropagateStateResponse response = serverStub.propagateState(request);
         } catch (StatusRuntimeException e) {
-            if (e.getStatus().getDescription().equals("UNAVAILABLE")) return false;
+            if (e.getStatus().getDescription().equals("UNAVAILABLE")) {
+                debug("Secondary server is unavailable");
+                return false;
+            }
             else if (e.getStatus().getCode() == Status.UNAVAILABLE.getCode()) {
+                debug("Secondary server either doesnt exist or port changed");
                 try {
                     serverStub = lookupService("DistLedger", "B");
                     CrossServerDistLedger.PropagateStateResponse response = serverStub.propagateState(request);
@@ -106,6 +122,7 @@ public class ServerService {
                 }
             }
         } catch (NoServerAvailableException exp) {
+            debug("There's no secondary server");
             return false;
         }
 
@@ -127,15 +144,22 @@ public class ServerService {
     }
 
     public DistLedgerCrossServerServiceGrpc.DistLedgerCrossServerServiceBlockingStub addStub(NamingServerDistLedger.ServerEntry serverEntry) {
-        ManagedChannel channel = ManagedChannelBuilder.forTarget(serverEntry.getTarget()).usePlaintext().build();
-        //debug("channel created: " + channel.toString());
+        ManagedChannel newChannel = ManagedChannelBuilder.forTarget(serverEntry.getTarget()).usePlaintext().build();
+        debug("channel created: " + newChannel.toString());
 
-        DistLedgerCrossServerServiceGrpc.DistLedgerCrossServerServiceBlockingStub newStub = DistLedgerCrossServerServiceGrpc.newBlockingStub(channel);
+        ManagedChannel channel = channelCache.get("B");
+        if (channel != null) {
+            channel.shutdownNow();
+            channelCache.remove(channel);
+        }
 
-        //debug("stub created" + newStub.toString());
+        DistLedgerCrossServerServiceGrpc.DistLedgerCrossServerServiceBlockingStub newStub =
+                DistLedgerCrossServerServiceGrpc.newBlockingStub(newChannel);
+
+        debug("stub created" + newStub.toString());
 
         stubCache.put(serverEntry.getQualifier(), newStub);
-        channelCache.add(channel);
+        channelCache.put(serverEntry.getQualifier(), newChannel);
 
         return newStub;
     }

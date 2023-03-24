@@ -43,15 +43,19 @@ public class ServerServiceImpl extends DistLedgerCrossServerServiceGrpc.DistLedg
 
         try {
             if (operationType.equals(DistLedgerCommonDefinitions.OperationType.OP_CREATE_ACCOUNT)) {
+                debug("Received create account request with username " + userId);
                 serverState.createAccount(userId, true);
             } else if (operationType.equals(DistLedgerCommonDefinitions.OperationType.OP_DELETE_ACCOUNT)) {
+                debug("Received delete account request of user " + userId);
                 serverState.deleteAccount(userId, true);
             } else if (operationType.equals(DistLedgerCommonDefinitions.OperationType.OP_TRANSFER_TO)) {
+                debug("Received transfer request from user " + operation.getUserId() +
+                        " to user " + operation.getDestUserId());
                 serverState.transferTo(operation.getUserId(), operation.getDestUserId(), operation.getAmount(), true);
             }
 
             CrossServerDistLedger.PropagateStateResponse response = CrossServerDistLedger.PropagateStateResponse.getDefaultInstance();
-
+            debug("Sending response to primary server");
             responseObserver.onNext(response);
             responseObserver.onCompleted();
 
