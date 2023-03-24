@@ -10,7 +10,6 @@ import pt.ulisboa.tecnico.distledger.contract.namingserver.NamingServerServiceGr
 import pt.ulisboa.tecnico.distledger.contract.namingserver.NamingServerDistLedger;
 import pt.tecnico.distledger.adminclient.AdminExceptions.NoServerAvailableException;
 
-import javax.swing.plaf.synth.SynthTextAreaUI;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.logging.Logger;
@@ -58,7 +57,7 @@ public class AdminService {
     public AdminServiceGrpc.AdminServiceBlockingStub lookupService(String qualifier) throws NoServerAvailableException {
         NamingServerDistLedger.LookupRequest request = NamingServerDistLedger.LookupRequest
                 .newBuilder()
-                .setServiceName("DistLedger") //TODO: Change hardcode service name (?)
+                .setServiceName("DistLedger")
                 .setQualifier(qualifier)
                 .build();
 
