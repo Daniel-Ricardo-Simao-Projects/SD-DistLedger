@@ -76,6 +76,7 @@ public class UserService {
                 .build();
 
         NamingServerDistLedger.LookupResponse response = namingServerStub.lookup(request);
+        debug("lookupService response: " + response.toString());
 
         if (response.getServerListList().isEmpty()) {
             throw new NoServerAvailableException();

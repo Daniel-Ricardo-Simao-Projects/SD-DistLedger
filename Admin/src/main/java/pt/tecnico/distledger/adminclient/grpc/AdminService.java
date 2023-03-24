@@ -80,6 +80,7 @@ public class AdminService {
                 .build();
 
         NamingServerDistLedger.LookupResponse response = namingServerStub.lookup(request);
+        debug("lookupService response: " + response.toString());
 
         if (response.getServerListList().isEmpty()) {
             throw new NoServerAvailableException();
@@ -87,7 +88,7 @@ public class AdminService {
         return addStub(response.getServerList(0));
     }
 
-    public void closeChannel() {
+    public void closeAllChannels() {
         channelCache.forEach(ManagedChannel::shutdownNow);
 
         debug("channel shutdown");
