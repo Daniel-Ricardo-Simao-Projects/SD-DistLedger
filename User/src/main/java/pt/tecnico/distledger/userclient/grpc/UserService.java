@@ -25,6 +25,11 @@ public class UserService {
 
     private NamingServerServiceGrpc.NamingServerServiceBlockingStub namingServerStub;
 
+    private static void debug(String debugMessage) {
+        if (DEBUG_FLAG)
+            logger.info(debugMessage);
+    }
+
     public UserService(final boolean DEBUG_FLAG) {
         this.DEBUG_FLAG = DEBUG_FLAG;
 
@@ -40,10 +45,10 @@ public class UserService {
 
     public void addStub(NamingServerDistLedger.ServerEntry serverEntry) {
         ManagedChannel channel = ManagedChannelBuilder.forTarget(serverEntry.getTarget()).usePlaintext().build();
-        if(DEBUG_FLAG) { logger.info("channel created: " + channel.toString()); }
+        debug("channel created: " + channel.toString());
 
         UserServiceGrpc.UserServiceBlockingStub stub = UserServiceGrpc.newBlockingStub(channel);
-        if(DEBUG_FLAG) { logger.info("stub created" + stub.toString()); }
+        debug("stub created" + stub.toString());
 
         stubCache.put(serverEntry.getQualifier(), stub);
 
@@ -71,7 +76,7 @@ public class UserService {
             channel.shutdownNow();
         }
 
-        if(DEBUG_FLAG) { logger.info("channel shutdown"); }
+        debug("channel shutdown");
     }
 
     public String createAccountService(String username, String serverQualifier) {
@@ -81,7 +86,7 @@ public class UserService {
             UserDistLedger.CreateAccountResponse response = stubCache.get(serverQualifier).createAccount(request);
             return "OK" + response.toString() + "\n";
         } catch (StatusRuntimeException e) {
-            if(DEBUG_FLAG) { logger.severe("user received createAccount error status: " + e.getStatus()); }
+            debug("user received createAccount error status: " + e.getStatus());
             if(e.getStatus().getDescription().equals("UNAVAILABLE")) { return e.getStatus().getDescription() + "\n"; }
             else { return "Caught exception with description: " + e.getStatus().getDescription() + "\n"; }
         }
@@ -97,7 +102,7 @@ public class UserService {
             UserDistLedger.DeleteAccountResponse response = stubCache.get(serverQualifier).deleteAccount(request);
             return "OK" + response.toString() + "\n";
         } catch (StatusRuntimeException e) {
-            if(DEBUG_FLAG) { logger.severe("user received deleteAccount error status: " + e.getStatus()); }
+            debug("user received deleteAccount error status: " + e.getStatus());
             if(e.getStatus().getDescription().equals("UNAVAILABLE")) { return e.getStatus().getDescription() + "\n"; }
             else { return "Caught exception with description: " + e.getStatus().getDescription() + "\n"; }
         }
@@ -111,7 +116,7 @@ public class UserService {
             return "OK\n" + response.getValue() + "\n";
         }
         catch (StatusRuntimeException e) {
-            if(DEBUG_FLAG) { logger.severe("user received getBalance error status: " + e.getStatus()); }
+            debug("user received getBalance error status: " + e.getStatus());
             if(e.getStatus().getDescription().equals("UNAVAILABLE")) { return e.getStatus().getDescription() + "\n"; }
             else { return "Caught exception with description: " + e.getStatus().getDescription() + "\n"; }
         }
@@ -130,7 +135,7 @@ public class UserService {
             return "OK" + response.toString() + "\n";
         }
         catch (StatusRuntimeException e) {
-            if(DEBUG_FLAG) { logger.severe("user received transferTo error status: " + e.getStatus()); }
+            debug("user received transferTo error status: " + e.getStatus());
             if(e.getStatus().getDescription().equals("UNAVAILABLE")) { return e.getStatus().getDescription() + "\n"; }
             else { return "Caught exception with description: " + e.getStatus().getDescription() + "\n"; }
         }

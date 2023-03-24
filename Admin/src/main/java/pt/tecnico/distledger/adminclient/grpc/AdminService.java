@@ -16,7 +16,7 @@ import java.util.logging.Logger;
 
 public class AdminService {
 
-    private final boolean DEBUG_FLAG;
+    private static boolean DEBUG_FLAG;
 
     private static final Logger logger = Logger.getLogger(AdminService.class.getName());
 
@@ -26,6 +26,11 @@ public class AdminService {
 
     private NamingServerServiceGrpc.NamingServerServiceBlockingStub namingServerStub;
 
+    private static void debug(String debugMessage) {
+        if (DEBUG_FLAG)
+            logger.info(debugMessage);
+    }
+
     public AdminService(final boolean DEBUG_FLAG) {
 
         this.DEBUG_FLAG = DEBUG_FLAG;
@@ -33,19 +38,19 @@ public class AdminService {
         this.stubCache = new HashMap<>();
 
         ManagedChannel channel = ManagedChannelBuilder.forTarget(namingServerTarget).usePlaintext().build();
-        if(DEBUG_FLAG) { logger.info("channel created: " + channel.toString()); }
+        debug("channel created: " + channel.toString());
 
         this.namingServerStub = NamingServerServiceGrpc.newBlockingStub(channel);
-        if(DEBUG_FLAG) { logger.info("stub created" + namingServerStub.toString()); }
+        debug("stub created" + namingServerStub.toString());
     }
 
     public AdminServiceGrpc.AdminServiceBlockingStub addStub(NamingServerDistLedger.ServerEntry serverEntry) {
         ManagedChannel channel = ManagedChannelBuilder.forTarget(serverEntry.getTarget()).usePlaintext().build();
-        if(DEBUG_FLAG) { logger.info("channel created: " + channel.toString()); }
+        debug("channel created: " + channel.toString());
 
         AdminServiceGrpc.AdminServiceBlockingStub newStub = AdminServiceGrpc.newBlockingStub(channel);
 
-        if(DEBUG_FLAG) { logger.info("stub created" + newStub.toString()); }
+        debug("stub created" + newStub.toString());
 
         stubCache.put(serverEntry.getQualifier(), newStub);
 
@@ -79,7 +84,7 @@ public class AdminService {
             channel.shutdownNow();
         }
 
-        if(DEBUG_FLAG) { logger.info("channel shutdown"); }
+        debug("channel shutdown");
     }
 
     public String activateServer(String serverQualifier) {

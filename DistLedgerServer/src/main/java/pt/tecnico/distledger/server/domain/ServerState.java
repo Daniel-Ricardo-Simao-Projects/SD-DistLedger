@@ -55,7 +55,8 @@ public class ServerState {
         ledger.add(createOp);
     }
 
-    public synchronized void deleteAccount(String userId, boolean isPropagation) throws BalanceIsntZeroException, AccountDoesntExistException, CannotRemoveBrokerException, ServerUnavailableException, WriteNotSupportedException, CouldNotPropagateException {
+    public synchronized void deleteAccount(String userId, boolean isPropagation) throws BalanceIsntZeroException, AccountDoesntExistException,
+            CannotRemoveBrokerException, ServerUnavailableException, WriteNotSupportedException, CouldNotPropagateException {
         if(qualifier.equals("B") && !isPropagation) {
             throw new WriteNotSupportedException();
         }

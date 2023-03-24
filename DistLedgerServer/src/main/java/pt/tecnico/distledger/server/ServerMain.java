@@ -40,7 +40,7 @@ public class ServerMain {
         final int port = Integer.parseInt(args[0]);
         final BindableService userImpl = new UserServiceImpl(serverState, DEBUG_FLAG);
         final BindableService adminImpl = new AdminServiceImpl(serverState, DEBUG_FLAG);
-        final BindableService serverImpl = new ServerServiceImpl(serverState);
+        final BindableService serverImpl = new ServerServiceImpl(serverState, DEBUG_FLAG);
 
         Server server = ServerBuilder.forPort(port).addService(userImpl).addService(adminImpl).addService(serverImpl).build();
 
