@@ -5,8 +5,7 @@ public class DestAccountEqualToFromAccountException extends Exception {
         super();
     }
 
-    @Override
-    public String getMessage() {
-        return "Destination account is equal to from account";
+    public String getMessage(String userFrom, String userTo) {
+        return "Destination account " + userFrom + " is equal to from account " + userTo;
     }
 }

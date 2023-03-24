@@ -3,7 +3,6 @@ package pt.tecnico.distledger.userclient.grpc;
 import io.grpc.ManagedChannel;
 import io.grpc.ManagedChannelBuilder;
 import io.grpc.StatusRuntimeException;
-import io.grpc.stub.AbstractStub;
 import pt.ulisboa.tecnico.distledger.contract.namingserver.NamingServerDistLedger;
 import pt.ulisboa.tecnico.distledger.contract.namingserver.NamingServerServiceGrpc;
 import pt.ulisboa.tecnico.distledger.contract.user.UserDistLedger;

@@ -91,7 +91,10 @@ public class ServerState {
         return balance;
     }
 
-    public synchronized void transferTo(String userId, String destAccount, int amount, boolean isPropagation) throws ServerUnavailableException, DestAccountEqualToFromAccountException, AccountDoesntExistException, DestAccountDoesntExistException, AmountIsZeroException, TransferBiggerThanBalanceException, NegativeBalanceException, WriteNotSupportedException, CouldNotPropagateException {
+    public synchronized void transferTo(String userId, String destAccount, int amount, boolean isPropagation)
+            throws ServerUnavailableException, DestAccountEqualToFromAccountException, AccountDoesntExistException,
+            DestAccountDoesntExistException, TransferBiggerThanBalanceException, WriteNotSupportedException,
+            CouldNotPropagateException, InvalidAmountException {
         if(qualifier.equals("B") && !isPropagation) {
             throw new WriteNotSupportedException();
         }
@@ -104,8 +107,7 @@ public class ServerState {
 
         if (senderBalance == null) { throw new AccountDoesntExistException(); }
         if (receiverBalance == null) { throw new DestAccountDoesntExistException(); }
-        if (amount < 0) { throw new NegativeBalanceException(); }
-        if (amount == 0) { throw new AmountIsZeroException(); }
+        if (amount <= 0) { throw new InvalidAmountException(); }
         if (senderBalance < amount) { throw new TransferBiggerThanBalanceException(); }
 
         TransferOp transferOp = new TransferOp(userId, destAccount, amount);

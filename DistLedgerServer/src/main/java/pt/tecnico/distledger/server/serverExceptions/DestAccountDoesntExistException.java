@@ -5,8 +5,7 @@ public class DestAccountDoesntExistException extends Exception {
         super();
     }
 
-    @Override
-    public String getMessage() {
-        return "AccountTo not found";
+    public String getMessage(String user) {
+        return "AccountTo " + user + " not found";
     }
 }

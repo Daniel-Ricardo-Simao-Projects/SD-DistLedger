@@ -38,19 +38,11 @@ public class UserServiceImpl extends UserServiceGrpc.UserServiceImplBase {
             responseObserver.onCompleted();
 
         } catch (AccountAlreadyExistsException e) {
-            if (DEBUG_FLAG) logger.warning("User " + request.getUserId() + " already exists");
+            if (DEBUG_FLAG) logger.warning(e.getMessage(request.getUserId()));
+            responseObserver.onError(ALREADY_EXISTS.withDescription(e.getMessage(request.getUserId())).asRuntimeException());
 
-            responseObserver.onError(ALREADY_EXISTS.withDescription(e.getMessage()).asRuntimeException());
-
-        } catch (ServerUnavailableException e) {
-            if (DEBUG_FLAG) logger.severe("Server unavailable");
-
-            responseObserver.onError(UNAVAILABLE.withDescription(e.getMessage()).asRuntimeException());
-        } catch (WriteNotSupportedException e) {
-            if (DEBUG_FLAG) logger.severe("Server unavailable for writing");
-
-            responseObserver.onError(UNAVAILABLE.withDescription(e.getMessage()).asRuntimeException());
-        } catch (CouldNotPropagateException e) {
+        } catch (ServerUnavailableException | WriteNotSupportedException | CouldNotPropagateException e) {
+            if (DEBUG_FLAG) logger.severe(e.getMessage());
             responseObserver.onError(UNAVAILABLE.withDescription(e.getMessage()).asRuntimeException());
         }
     }
@@ -70,29 +62,15 @@ public class UserServiceImpl extends UserServiceGrpc.UserServiceImplBase {
             responseObserver.onCompleted();
 
         } catch (AccountDoesntExistException e) {
-            if (DEBUG_FLAG) logger.severe("User " + request.getUserId() + " not found");
+            if (DEBUG_FLAG) logger.severe(e.getMessage(request.getUserId()));
+            responseObserver.onError(NOT_FOUND.withDescription(e.getMessage(request.getUserId())).asRuntimeException());
 
-            responseObserver.onError(NOT_FOUND.withDescription(e.getMessage()).asRuntimeException());
-
-        } catch (BalanceIsntZeroException e) {
-            if (DEBUG_FLAG) logger.severe("Balance of user " + request.getUserId() + " is not zero");
-
+        } catch (BalanceIsntZeroException | CannotRemoveBrokerException e) {
+            if (DEBUG_FLAG) logger.severe(e.getMessage());
             responseObserver.onError(PERMISSION_DENIED.withDescription(e.getMessage()).asRuntimeException());
 
-        } catch (CannotRemoveBrokerException e) {
-            if (DEBUG_FLAG) logger.severe("User tried to remove broker");
-
-            responseObserver.onError(PERMISSION_DENIED.withDescription(e.getMessage()).asRuntimeException());
-
-        } catch (ServerUnavailableException e) {
-            if (DEBUG_FLAG) logger.severe("Server unavailable");
-
-            responseObserver.onError(UNAVAILABLE.withDescription(e.getMessage()).asRuntimeException());
-        } catch (WriteNotSupportedException e) {
-            if (DEBUG_FLAG) logger.severe("Server unavailable for writing");
-
-            responseObserver.onError(UNAVAILABLE.withDescription(e.getMessage()).asRuntimeException());
-        } catch (CouldNotPropagateException e) {
+        } catch (ServerUnavailableException | WriteNotSupportedException | CouldNotPropagateException e) {
+            if (DEBUG_FLAG) logger.severe(e.getMessage());
             responseObserver.onError(UNAVAILABLE.withDescription(e.getMessage()).asRuntimeException());
         }
     }
@@ -113,13 +91,11 @@ public class UserServiceImpl extends UserServiceGrpc.UserServiceImplBase {
             responseObserver.onCompleted();
 
         } catch (AccountDoesntExistException e) {
-            if (DEBUG_FLAG) logger.warning("User " + request.getUserId() + " not found");
-
-            responseObserver.onError(NOT_FOUND.withDescription(e.getMessage()).asRuntimeException());
+            if (DEBUG_FLAG) logger.warning(e.getMessage(request.getUserId()));
+            responseObserver.onError(NOT_FOUND.withDescription(e.getMessage(request.getUserId())).asRuntimeException());
 
         } catch (ServerUnavailableException e) {
-            if (DEBUG_FLAG) logger.severe("Server unavailable");
-
+            if (DEBUG_FLAG) logger.severe(e.getMessage());
             responseObserver.onError(UNAVAILABLE.withDescription(e.getMessage()).asRuntimeException());
         }
     }
@@ -142,44 +118,27 @@ public class UserServiceImpl extends UserServiceGrpc.UserServiceImplBase {
             responseObserver.onCompleted();
 
         } catch (AccountDoesntExistException e) {
-            if (DEBUG_FLAG) logger.severe("AccountFrom " + request.getAccountFrom() + " not found");
-
-            responseObserver.onError(NOT_FOUND.withDescription(e.getMessage()).asRuntimeException());
+            if (DEBUG_FLAG) logger.severe(e.getMessage(request.getAccountFrom()));
+            responseObserver.onError(NOT_FOUND.withDescription(e.getMessage(request.getAccountFrom())).asRuntimeException());
 
         } catch (DestAccountEqualToFromAccountException e) {
-            if (DEBUG_FLAG) logger.severe("AccountFrom: " + request.getAccountFrom() +  "is equal to AccountTo: " + request.getAccountTo());
-
-            responseObserver.onError(INVALID_ARGUMENT.withDescription(e.getMessage()).asRuntimeException());
+            if (DEBUG_FLAG) logger.severe(e.getMessage(request.getAccountFrom(), request.getAccountTo()));
+            responseObserver.onError(INVALID_ARGUMENT.withDescription(e.getMessage(request.getAccountFrom(), request.getAccountTo())).asRuntimeException());
 
         } catch (DestAccountDoesntExistException e) {
-            if (DEBUG_FLAG) logger.severe("AccountTo " + request.getAccountTo() + " not found");
+            if (DEBUG_FLAG) logger.severe(e.getMessage(request.getAccountTo()));
+            responseObserver.onError(NOT_FOUND.withDescription(e.getMessage(request.getAccountTo())).asRuntimeException());
 
-            responseObserver.onError(NOT_FOUND.withDescription(e.getMessage()).asRuntimeException());
-
-        } catch (NegativeBalanceException e) {
-            if (DEBUG_FLAG) logger.severe("The amount <" + request.getAmount() + "> is negative");
-
-            responseObserver.onError(INVALID_ARGUMENT.withDescription(e.getMessage()).asRuntimeException());
-
-        } catch (AmountIsZeroException e) {
-            if (DEBUG_FLAG) logger.severe("The amount <" + request.getAmount() + "> is zero");
-
-            responseObserver.onError(INVALID_ARGUMENT.withDescription(e.getMessage()).asRuntimeException());
+        } catch (InvalidAmountException e) {
+            if (DEBUG_FLAG) logger.severe(e.getMessage(request.getAmount()));
+            responseObserver.onError(INVALID_ARGUMENT.withDescription(e.getMessage(request.getAmount())).asRuntimeException());
 
         } catch (TransferBiggerThanBalanceException e) {
-            if (DEBUG_FLAG) logger.severe("The amount <" + request.getAmount() + "> is bigger than the AccountFrom balance");
+            if (DEBUG_FLAG) logger.severe(e.getMessage(request.getAmount()));
+            responseObserver.onError(PERMISSION_DENIED.withDescription(e.getMessage(request.getAmount())).asRuntimeException());
 
-            responseObserver.onError(PERMISSION_DENIED.withDescription(e.getMessage()).asRuntimeException());
-
-        } catch (ServerUnavailableException e) {
-            if (DEBUG_FLAG) logger.severe("Server unavailable");
-
-            responseObserver.onError(UNAVAILABLE.withDescription(e.getMessage()).asRuntimeException());
-        } catch (WriteNotSupportedException e) {
-            if (DEBUG_FLAG) logger.severe("Server unavailable for writing");
-
-            responseObserver.onError(UNAVAILABLE.withDescription(e.getMessage()).asRuntimeException());
-        } catch (CouldNotPropagateException e) {
+        } catch (ServerUnavailableException | WriteNotSupportedException | CouldNotPropagateException e) {
+            if (DEBUG_FLAG) logger.severe(e.getMessage());
             responseObserver.onError(UNAVAILABLE.withDescription(e.getMessage()).asRuntimeException());
         }
     }

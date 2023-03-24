@@ -5,8 +5,7 @@ public class TransferBiggerThanBalanceException extends Exception {
         super();
     }
 
-    @Override
-    public String getMessage() {
-        return "Balance lower than amount to send";
+    public String getMessage(int amount) {
+        return "Balance lower than amount " + amount + " to send";
     }
 }

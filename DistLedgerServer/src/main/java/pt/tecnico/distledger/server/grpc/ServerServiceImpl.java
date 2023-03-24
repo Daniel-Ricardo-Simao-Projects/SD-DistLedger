@@ -6,7 +6,6 @@ import pt.tecnico.distledger.server.serverExceptions.*;
 import pt.ulisboa.tecnico.distledger.contract.DistLedgerCommonDefinitions;
 import pt.ulisboa.tecnico.distledger.contract.distledgerserver.CrossServerDistLedger;
 import pt.ulisboa.tecnico.distledger.contract.distledgerserver.DistLedgerCrossServerServiceGrpc;
-import pt.ulisboa.tecnico.distledger.contract.user.UserDistLedger;
 
 import static io.grpc.Status.*;
 import static io.grpc.Status.PERMISSION_DENIED;
@@ -47,26 +46,13 @@ public class ServerServiceImpl extends DistLedgerCrossServerServiceGrpc.DistLedg
 
         } catch (AccountAlreadyExistsException e) {
             responseObserver.onError(ALREADY_EXISTS.withDescription(e.getMessage()).asRuntimeException());
-        } catch (ServerUnavailableException e) {
+        } catch (ServerUnavailableException | WriteNotSupportedException | CouldNotPropagateException e) {
             responseObserver.onError(UNAVAILABLE.withDescription(e.getMessage()).asRuntimeException());
-        } catch (WriteNotSupportedException | CouldNotPropagateException e) {
-            responseObserver.onError(UNAVAILABLE.withDescription(e.getMessage()).asRuntimeException());
-        } catch (AccountDoesntExistException e) {
+        } catch (AccountDoesntExistException | DestAccountDoesntExistException e) {
             responseObserver.onError(NOT_FOUND.withDescription(e.getMessage()).asRuntimeException());
-        } catch (DestAccountEqualToFromAccountException e) {
+        } catch (InvalidAmountException | DestAccountEqualToFromAccountException e) {
             responseObserver.onError(INVALID_ARGUMENT.withDescription(e.getMessage()).asRuntimeException());
-        } catch (DestAccountDoesntExistException e) {
-            responseObserver.onError(NOT_FOUND.withDescription(e.getMessage()).asRuntimeException());
-        } catch (NegativeBalanceException e) {
-            responseObserver.onError(INVALID_ARGUMENT.withDescription(e.getMessage()).asRuntimeException());
-        } catch (AmountIsZeroException e) {
-            responseObserver.onError(INVALID_ARGUMENT.withDescription(e.getMessage()).asRuntimeException());
-        } catch (TransferBiggerThanBalanceException e) {
-            responseObserver.onError(PERMISSION_DENIED.withDescription(e.getMessage()).asRuntimeException());
-            responseObserver.onError(NOT_FOUND.withDescription(e.getMessage()).asRuntimeException());
-        } catch (BalanceIsntZeroException e) {
-            responseObserver.onError(PERMISSION_DENIED.withDescription(e.getMessage()).asRuntimeException());
-        } catch (CannotRemoveBrokerException e) {
+        } catch (TransferBiggerThanBalanceException | BalanceIsntZeroException | CannotRemoveBrokerException e) {
             responseObserver.onError(PERMISSION_DENIED.withDescription(e.getMessage()).asRuntimeException());
         }
     }

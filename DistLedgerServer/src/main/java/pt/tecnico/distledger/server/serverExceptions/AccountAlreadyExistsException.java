@@ -6,8 +6,7 @@ public class AccountAlreadyExistsException extends Exception {
         super();
     }
 
-    @Override
-    public String getMessage() {
-        return "Username already taken";
+    public String getMessage(String user) {
+        return "Username " + user + " already taken";
     }
 }

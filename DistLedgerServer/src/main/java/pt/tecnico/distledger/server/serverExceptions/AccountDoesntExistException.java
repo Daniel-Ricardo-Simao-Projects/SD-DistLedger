@@ -5,8 +5,7 @@ public class AccountDoesntExistException extends Exception {
         super();
     }
 
-    @Override
-    public String getMessage() {
-        return "User not found";
+    public String getMessage(String user) {
+        return "User " + user + " not found";
     }
 }
