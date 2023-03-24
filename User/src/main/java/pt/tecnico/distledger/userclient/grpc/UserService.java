@@ -2,7 +2,9 @@ package pt.tecnico.distledger.userclient.grpc;
 
 import io.grpc.ManagedChannel;
 import io.grpc.ManagedChannelBuilder;
+import io.grpc.Status;
 import io.grpc.StatusRuntimeException;
+import pt.tecnico.distledger.userclient.UserExceptions.NoServerAvailableException;
 import pt.ulisboa.tecnico.distledger.contract.namingserver.NamingServerDistLedger;
 import pt.ulisboa.tecnico.distledger.contract.namingserver.NamingServerServiceGrpc;
 import pt.ulisboa.tecnico.distledger.contract.user.UserDistLedger;
@@ -11,7 +13,6 @@ import pt.ulisboa.tecnico.distledger.contract.user.UserServiceGrpc;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.logging.Logger;
-
 
 public class UserService {
 
@@ -23,15 +24,14 @@ public class UserService {
 
     private static final String namingServerTarget = "localhost:5001";
 
-    private NamingServerServiceGrpc.NamingServerServiceBlockingStub namingServerStub;
+    private final NamingServerServiceGrpc.NamingServerServiceBlockingStub namingServerStub;
 
     private static void debug(String debugMessage) {
-        if (DEBUG_FLAG)
-            logger.info(debugMessage);
+        if (DEBUG_FLAG) logger.info(debugMessage);
     }
 
     public UserService(final boolean DEBUG_FLAG) {
-        this.DEBUG_FLAG = DEBUG_FLAG;
+        UserService.DEBUG_FLAG = DEBUG_FLAG;
 
         this.stubCache = new HashMap<>();
 
@@ -43,36 +43,54 @@ public class UserService {
 
     }
 
-    public void addStub(NamingServerDistLedger.ServerEntry serverEntry) {
+    public UserServiceGrpc.UserServiceBlockingStub addStub(NamingServerDistLedger.ServerEntry serverEntry) {
         ManagedChannel channel = ManagedChannelBuilder.forTarget(serverEntry.getTarget()).usePlaintext().build();
+        if (DEBUG_FLAG) { logger.info("channel created: " + channel.toString()); }
+
+        UserServiceGrpc.UserServiceBlockingStub newStub = UserServiceGrpc.newBlockingStub(channel);
+        if (DEBUG_FLAG) { logger.info("stub created" + newStub.toString()); }
+
+        stubCache.put(serverEntry.getQualifier(), newStub);
         debug("channel created: " + channel.toString());
 
+        if (DEBUG_FLAG) { logger.info("stubCache:"+ stubCache.toString()); }
         UserServiceGrpc.UserServiceBlockingStub stub = UserServiceGrpc.newBlockingStub(channel);
         debug("stub created" + stub.toString());
 
-        stubCache.put(serverEntry.getQualifier(), stub);
-
-        System.out.println(stubCache);
+        return newStub;
     }
 
-    public void lookupService(String qualifier) {
+    private UserServiceGrpc.UserServiceBlockingStub getStub(String serverQualifier) throws NoServerAvailableException {
+        UserServiceGrpc.UserServiceBlockingStub stub = stubCache.get(serverQualifier);
+        if (stub == null) {
+            stub = lookupService(serverQualifier);
+            stubCache.put(serverQualifier, stub);
+        }
+        debug("getStub returned: " + stub.toString());
+        return stub;
+    }
+
+    public UserServiceGrpc.UserServiceBlockingStub lookupService(String qualifier) throws NoServerAvailableException {
         NamingServerDistLedger.LookupRequest request = NamingServerDistLedger.LookupRequest.newBuilder()
-                .setServiceName("DistLedger").setQualifier(qualifier).build(); // TODO change hardcode serviceName?
+                .setServiceName("DistLedger")
+                .setQualifier(qualifier)
+                .build();
+
         NamingServerDistLedger.LookupResponse response = namingServerStub.lookup(request);
 
         if (response.getServerListList().isEmpty()) {
-            // TODO create exception
+            throw new NoServerAvailableException();
         }
-        if (!stubCache.containsKey(response.getServerList(0).getQualifier())) {
-            addStub(response.getServerList(0));
-            // TODO check other cases;
-        }
+        return addStub(response.getServerList(0));
     }
 
     public void closeChannel() {
         ManagedChannel namingServerChannel = (ManagedChannel) namingServerStub.getChannel();
         namingServerChannel.shutdownNow();
+        debug("NamingServer channel shutdown");
+
         for (ManagedChannel channel : stubCache.values().stream().map(stub -> (ManagedChannel) stub.getChannel()).toList()) {
+            debug("channel shutdown" + channel.toString());
             channel.shutdownNow();
         }
 
@@ -80,64 +98,133 @@ public class UserService {
     }
 
     public String createAccountService(String username, String serverQualifier) {
-        lookupService(serverQualifier);
+        UserServiceGrpc.UserServiceBlockingStub stub;
         try {
-            UserDistLedger.CreateAccountRequest request = UserDistLedger.CreateAccountRequest.newBuilder().setUserId(username).build();
-            UserDistLedger.CreateAccountResponse response = stubCache.get(serverQualifier).createAccount(request);
-            return "OK" + response.toString() + "\n";
+            stub = getStub(serverQualifier);
+            return createAccountRequest(stub, username);
         } catch (StatusRuntimeException e) {
             debug("user received createAccount error status: " + e.getStatus());
-            if(e.getStatus().getDescription().equals("UNAVAILABLE")) { return e.getStatus().getDescription() + "\n"; }
-            else { return "Caught exception with description: " + e.getStatus().getDescription() + "\n"; }
+            if (e.getStatus().getCode() == Status.UNAVAILABLE.getCode()) {
+                try {
+                    stub = lookupService(serverQualifier);
+                    return createAccountRequest(stub, username);
+                } catch (NoServerAvailableException noServer) {
+                    return e.getMessage() + "\n";
+                } catch (StatusRuntimeException exception) {
+                    return "Caught exception with description: " + e.getStatus().getDescription() + "\n";
+                }
+            } else {
+                return "Caught exception with description: " + e.getStatus().getDescription() + "\n";
+            }
+        } catch (NoServerAvailableException e) {
+            return e.getMessage() + "\n";
         }
     }
 
     public String deleteAccountService(String username, String serverQualifier) {
-        lookupService(serverQualifier);
+        UserServiceGrpc.UserServiceBlockingStub stub;
         try {
-            UserDistLedger.DeleteAccountRequest request = UserDistLedger.DeleteAccountRequest
-                    .newBuilder()
-                    .setUserId(username)
-                    .build();
-            UserDistLedger.DeleteAccountResponse response = stubCache.get(serverQualifier).deleteAccount(request);
-            return "OK" + response.toString() + "\n";
+            stub = getStub(serverQualifier);
+            return deleteAccountRequest(stub, username);
         } catch (StatusRuntimeException e) {
             debug("user received deleteAccount error status: " + e.getStatus());
-            if(e.getStatus().getDescription().equals("UNAVAILABLE")) { return e.getStatus().getDescription() + "\n"; }
-            else { return "Caught exception with description: " + e.getStatus().getDescription() + "\n"; }
+            if (e.getStatus().getCode() == Status.UNAVAILABLE.getCode()) {
+                try {
+                    stub = lookupService(serverQualifier);
+                    return deleteAccountRequest(stub, username);
+                } catch (NoServerAvailableException noServer) {
+                    return e.getMessage() + "\n";
+                } catch (StatusRuntimeException exception) {
+                    return "Caught exception with description: " + e.getStatus().getDescription() + "\n";
+                }
+            } else {
+                return "Caught exception with description: " + e.getStatus().getDescription() + "\n";
+            }
+        } catch (NoServerAvailableException e) {
+            return e.getMessage() + "\n";
         }
     }
 
     public String getBalanceService(String username, String serverQualifier) {
-        lookupService(serverQualifier);
-        UserDistLedger.BalanceRequest request = UserDistLedger.BalanceRequest.newBuilder().setUserId(username).build();
+        UserServiceGrpc.UserServiceBlockingStub stub;
         try {
-            UserDistLedger.BalanceResponse response = stubCache.get(serverQualifier).balance(request);
-            return "OK\n" + response.getValue() + "\n";
-        }
-        catch (StatusRuntimeException e) {
+            stub = getStub(serverQualifier);
+            return getBalanceRequest(stub, username);
+        } catch (StatusRuntimeException e) {
             debug("user received getBalance error status: " + e.getStatus());
-            if(e.getStatus().getDescription().equals("UNAVAILABLE")) { return e.getStatus().getDescription() + "\n"; }
-            else { return "Caught exception with description: " + e.getStatus().getDescription() + "\n"; }
+            if (e.getStatus().getCode() == Status.UNAVAILABLE.getCode()) {
+                try {
+                    stub = lookupService(serverQualifier);
+                    return getBalanceRequest(stub, username);
+                } catch (NoServerAvailableException noServer) {
+                    return e.getMessage() + "\n";
+                } catch (StatusRuntimeException exception) {
+                    return "Caught exception with description: " + e.getStatus().getDescription() + "\n";
+                }
+            } else {
+                return "Caught exception with description: " + e.getStatus().getDescription() + "\n";
+            }
+        } catch (NoServerAvailableException e) {
+            return e.getMessage() + "\n";
         }
     }
 
     public String transferToService(String fromUsername, String toUsername, Integer amount, String serverQualifier) {
-        lookupService(serverQualifier);
+        UserServiceGrpc.UserServiceBlockingStub stub;
+        try {
+            stub = getStub(serverQualifier);
+            return transferToRequest(stub, fromUsername, toUsername, amount);
+        } catch (StatusRuntimeException e) {
+            debug("user received transferTo error status: " + e.getStatus());
+            if (e.getStatus().getCode() == Status.UNAVAILABLE.getCode()) {
+                try {
+                    stub = lookupService(serverQualifier);
+                    return transferToRequest(stub, fromUsername, toUsername, amount);
+                } catch (NoServerAvailableException noServer) {
+                    return e.getMessage() + "\n";
+                } catch (StatusRuntimeException exception) {
+                    return "Caught exception with description: " + e.getStatus().getDescription() + "\n";
+                }
+            } else {
+                return "Caught exception with description: " + e.getStatus().getDescription() + "\n";
+            }
+        } catch (NoServerAvailableException e) {
+            return e.getMessage() + "\n";
+        }
+    }
+
+    public String createAccountRequest(UserServiceGrpc.UserServiceBlockingStub stub, String username) {
+        UserDistLedger.CreateAccountRequest request = UserDistLedger.CreateAccountRequest.newBuilder()
+                .setUserId(username)
+                .build();
+        UserDistLedger.CreateAccountResponse response = stub.createAccount(request);
+        return "OK" + response.toString() + "\n";
+    }
+
+    public String deleteAccountRequest(UserServiceGrpc.UserServiceBlockingStub stub, String username) {
+        UserDistLedger.DeleteAccountRequest request = UserDistLedger.DeleteAccountRequest.newBuilder()
+                .setUserId(username)
+                .build();
+        UserDistLedger.DeleteAccountResponse response = stub.deleteAccount(request);
+        return "OK" + response.toString() + "\n";
+    }
+
+    public String getBalanceRequest(UserServiceGrpc.UserServiceBlockingStub stub, String username) {
+        UserDistLedger.BalanceRequest request = UserDistLedger.BalanceRequest.newBuilder().setUserId(username).build();
+        UserDistLedger.BalanceResponse response = stub.balance(request);
+        return "OK\n" + response.getValue() + "\n";
+    }
+
+    public String transferToRequest(UserServiceGrpc.UserServiceBlockingStub stub, String fromUsername, String toUsername, int amount) {
         UserDistLedger.TransferToRequest request = UserDistLedger.TransferToRequest
                 .newBuilder()
                 .setAccountFrom(fromUsername)
                 .setAccountTo(toUsername)
                 .setAmount(amount)
                 .build();
-        try {
-            UserDistLedger.TransferToResponse response = stubCache.get(serverQualifier).transferTo(request);
-            return "OK" + response.toString() + "\n";
-        }
-        catch (StatusRuntimeException e) {
-            debug("user received transferTo error status: " + e.getStatus());
-            if(e.getStatus().getDescription().equals("UNAVAILABLE")) { return e.getStatus().getDescription() + "\n"; }
-            else { return "Caught exception with description: " + e.getStatus().getDescription() + "\n"; }
-        }
+
+        UserDistLedger.TransferToResponse response = stub.transferTo(request);
+        return "OK" + response.toString() + "\n";
     }
+
 }

@@ -44,6 +44,8 @@ public class ServerService {
                 .setServerAddress(target)
                 .build();
         DeleteResponse response = stub.delete(request);
+        ManagedChannel channel = (ManagedChannel) stub.getChannel();
+        channel.shutdownNow();
         return response.toString();
     }
 

@@ -23,7 +23,7 @@ public class UserClientMain {
             return;
         }
 
-        if(DEBUG_FLAG) { System.out.printf("Debug Mode Activated!\n"); }
+        if(DEBUG_FLAG) { System.out.print("Debug Mode Activated!\n"); }
 
         final String host = args[0];
         final int port = Integer.parseInt(args[1]);
