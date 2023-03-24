@@ -4,6 +4,7 @@ import pt.tecnico.distledger.namingserver.namingServerExceptions.NotPossibleToRe
 import pt.tecnico.distledger.namingserver.namingServerExceptions.QualifierAlreadyRegisteredException;
 import pt.tecnico.distledger.namingserver.namingServerExceptions.TargetAlreadyRegisteredException;
 
+import java.util.HashSet;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.Optional;
@@ -35,7 +36,9 @@ public class NamingServerState {
     }
 
     public List<ServerEntry> lookup(String service, String qualifier) {
-        return servicesMap.get(service).getServerEntries().stream()
+        ServiceEntry serviceEntry = servicesMap.get(service);
+        if (serviceEntry == null) return new HashSet<ServerEntry>().stream().toList();
+        return serviceEntry.getServerEntries().stream()
                 .filter(serverEntry -> serverEntry.getQualifier().equals(qualifier) || qualifier.isEmpty())
                 .toList();
     }
