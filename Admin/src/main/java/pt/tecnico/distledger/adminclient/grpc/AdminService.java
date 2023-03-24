@@ -86,17 +86,13 @@ public class AdminService {
         AdminServiceGrpc.AdminServiceBlockingStub stub = stubCache.get(serverQualifier);
         if (stub != null) {
             try {
-                AdminDistLedger.ActivateRequest request = AdminDistLedger.ActivateRequest.newBuilder().build();
-                AdminDistLedger.ActivateResponse response = stub.activate(request);
-                return "OK\n";
+                return activateRequest(stub);
             }
             catch (StatusRuntimeException e) {
                 if (e.getStatus().getCode() == Status.UNAVAILABLE.getCode()) {
                     try {
                         stub = lookupService(serverQualifier);
-                        AdminDistLedger.ActivateRequest request = AdminDistLedger.ActivateRequest.newBuilder().build();
-                        AdminDistLedger.ActivateResponse response = stub.activate(request);
-                        return "OK\n";
+                        return activateRequest(stub);
                     }
                     catch (NoServerAvailableException exp) {
                         return "Caught exception with description: " + exp.getMessage() + "\n";
@@ -106,9 +102,7 @@ public class AdminService {
         } else {
             try {
                 stub = lookupService(serverQualifier);
-                AdminDistLedger.ActivateRequest request = AdminDistLedger.ActivateRequest.newBuilder().build();
-                AdminDistLedger.ActivateResponse response = stub.activate(request);
-                return "OK\n";
+                return activateRequest(stub);
             }
             catch (NoServerAvailableException exp) {
                 return "Caught exception with description: " + exp.getMessage() + "\n";
@@ -121,17 +115,13 @@ public class AdminService {
         AdminServiceGrpc.AdminServiceBlockingStub stub = stubCache.get(serverQualifier);
         if (stub != null) {
             try {
-                AdminDistLedger.DeactivateRequest request = AdminDistLedger.DeactivateRequest.newBuilder().build();
-                AdminDistLedger.DeactivateResponse response = stub.deactivate(request);
-                return "OK\n";
+                return deactivateRequest(stub);
             }
             catch (StatusRuntimeException e) {
                 if (e.getStatus().getCode() == Status.UNAVAILABLE.getCode()) {
                     try {
                         stub = lookupService(serverQualifier);
-                        AdminDistLedger.DeactivateRequest request = AdminDistLedger.DeactivateRequest.newBuilder().build();
-                        AdminDistLedger.DeactivateResponse response = stub.deactivate(request);
-                        return "OK\n";
+                        return deactivateRequest(stub);
                     }
                     catch (NoServerAvailableException exp) {
                         return "Caught exception with description: " + exp.getMessage() + "\n";
@@ -141,9 +131,7 @@ public class AdminService {
         } else {
             try {
                 stub = lookupService(serverQualifier);
-                AdminDistLedger.DeactivateRequest request = AdminDistLedger.DeactivateRequest.newBuilder().build();
-                AdminDistLedger.DeactivateResponse response = stub.deactivate(request);
-                return "OK\n";
+                return deactivateRequest(stub);
             }
             catch (NoServerAvailableException exp) {
                 return "Caught exception with description: " + exp.getMessage() + "\n";
@@ -156,17 +144,13 @@ public class AdminService {
         AdminServiceGrpc.AdminServiceBlockingStub stub = stubCache.get(serverQualifier);
         if (stub != null) {
             try {
-                AdminDistLedger.getLedgerStateRequest request = AdminDistLedger.getLedgerStateRequest.newBuilder().build();
-                AdminDistLedger.getLedgerStateResponse response = stub.getLedgerState(request);
-                return "OK\n" + response.toString();
+                return getLedgerStateRequest(stub);
             }
             catch (StatusRuntimeException e) {
                 if (e.getStatus().getCode() == Status.UNAVAILABLE.getCode()) {
                     try {
                         stub = lookupService(serverQualifier);
-                        AdminDistLedger.getLedgerStateRequest request = AdminDistLedger.getLedgerStateRequest.newBuilder().build();
-                        AdminDistLedger.getLedgerStateResponse response = stub.getLedgerState(request);
-                        return "OK\n" + response.toString();
+                        return getLedgerStateRequest(stub);
                     }
                     catch (NoServerAvailableException exp) {
                         return "Caught exception with description: " + exp.getMessage() + "\n";
@@ -176,14 +160,29 @@ public class AdminService {
         } else {
             try {
                 stub = lookupService(serverQualifier);
-                AdminDistLedger.getLedgerStateRequest request = AdminDistLedger.getLedgerStateRequest.newBuilder().build();
-                AdminDistLedger.getLedgerStateResponse response = stub.getLedgerState(request);
-                return "OK\n" + response.toString();
+                return getLedgerStateRequest(stub);
             }
             catch (NoServerAvailableException exp) {
                 return "Caught exception with description: " + exp.getMessage() + "\n";
             }
         }
         return "";
+    }
+
+    public String activateRequest(AdminServiceGrpc.AdminServiceBlockingStub stub) {
+        AdminDistLedger.ActivateRequest request = AdminDistLedger.ActivateRequest.newBuilder().build();
+        AdminDistLedger.ActivateResponse response = stub.activate(request);
+        return "OK\n";
+    }
+
+    public String deactivateRequest(AdminServiceGrpc.AdminServiceBlockingStub stub) {
+        AdminDistLedger.DeactivateRequest request = AdminDistLedger.DeactivateRequest.newBuilder().build();
+        AdminDistLedger.DeactivateResponse response = stub.deactivate(request);
+        return "OK\n";
+    }
+    public String getLedgerStateRequest(AdminServiceGrpc.AdminServiceBlockingStub stub) {
+        AdminDistLedger.getLedgerStateRequest request = AdminDistLedger.getLedgerStateRequest.newBuilder().build();
+        AdminDistLedger.getLedgerStateResponse response = stub.getLedgerState(request);
+        return "OK\n" + response.toString();
     }
 }
