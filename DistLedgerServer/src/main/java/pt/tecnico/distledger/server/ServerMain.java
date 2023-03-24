@@ -15,7 +15,7 @@ public class ServerMain {
 
     private static final ServerService serverService = new ServerService("localhost:5001");
 
-    private static boolean DEBUG_FLAG = (System.getProperty("debug") != null);
+    private static final boolean DEBUG_FLAG = (System.getProperty("debug") != null);
 
     public static void main(String[] args) throws IOException, InterruptedException {
         ServerState serverState = new ServerState(serverService, args[1]);
@@ -35,7 +35,7 @@ public class ServerMain {
             return;
         }
 
-        if(DEBUG_FLAG) { System.out.printf("Debug Mode Activated!\n"); }
+        if (DEBUG_FLAG) { System.out.print("Debug Mode Activated!\n"); }
 
         final int port = Integer.parseInt(args[0]);
         final BindableService userImpl = new UserServiceImpl(serverState, DEBUG_FLAG);

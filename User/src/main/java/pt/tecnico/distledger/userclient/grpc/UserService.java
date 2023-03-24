@@ -10,8 +10,7 @@ import pt.ulisboa.tecnico.distledger.contract.namingserver.NamingServerServiceGr
 import pt.ulisboa.tecnico.distledger.contract.user.UserDistLedger;
 import pt.ulisboa.tecnico.distledger.contract.user.UserServiceGrpc;
 
-import java.util.HashMap;
-import java.util.Map;
+import java.util.*;
 import java.util.logging.Logger;
 
 public class UserService {
@@ -21,6 +20,8 @@ public class UserService {
     private static final Logger logger = Logger.getLogger(UserService.class.getName());
 
     private Map<String, UserServiceGrpc.UserServiceBlockingStub> stubCache;
+
+    private List<ManagedChannel> channelCache;
 
     private static final String namingServerTarget = "localhost:5001";
 
@@ -34,28 +35,26 @@ public class UserService {
         UserService.DEBUG_FLAG = DEBUG_FLAG;
 
         this.stubCache = new HashMap<>();
+        this.channelCache = new ArrayList<>();
 
         ManagedChannel channel = ManagedChannelBuilder.forTarget(namingServerTarget).usePlaintext().build();
-        if(DEBUG_FLAG) { logger.info("channel created: " + channel.toString()); }
+        debug("naming channel created: " + channel.toString());
+        channelCache.add(channel);
 
         this.namingServerStub = NamingServerServiceGrpc.newBlockingStub(channel);
-        if(DEBUG_FLAG) { logger.info("stub created" + namingServerStub.toString()); }
+        debug("naming stub created: " + namingServerStub.toString());
 
     }
 
     public UserServiceGrpc.UserServiceBlockingStub addStub(NamingServerDistLedger.ServerEntry serverEntry) {
         ManagedChannel channel = ManagedChannelBuilder.forTarget(serverEntry.getTarget()).usePlaintext().build();
-        if (DEBUG_FLAG) { logger.info("channel created: " + channel.toString()); }
+        debug("addStub - channel created: " + channel.toString());
+        channelCache.add(channel);
 
         UserServiceGrpc.UserServiceBlockingStub newStub = UserServiceGrpc.newBlockingStub(channel);
-        if (DEBUG_FLAG) { logger.info("stub created" + newStub.toString()); }
+        debug("addStub - stub created" + newStub.toString());
 
         stubCache.put(serverEntry.getQualifier(), newStub);
-        debug("channel created: " + channel.toString());
-
-        if (DEBUG_FLAG) { logger.info("stubCache:"+ stubCache.toString()); }
-        UserServiceGrpc.UserServiceBlockingStub stub = UserServiceGrpc.newBlockingStub(channel);
-        debug("stub created" + stub.toString());
 
         return newStub;
     }
@@ -77,6 +76,7 @@ public class UserService {
                 .build();
 
         NamingServerDistLedger.LookupResponse response = namingServerStub.lookup(request);
+        debug("lookupService response: " + response.toString());
 
         if (response.getServerListList().isEmpty()) {
             throw new NoServerAvailableException();
@@ -84,15 +84,8 @@ public class UserService {
         return addStub(response.getServerList(0));
     }
 
-    public void closeChannel() {
-        ManagedChannel namingServerChannel = (ManagedChannel) namingServerStub.getChannel();
-        namingServerChannel.shutdownNow();
-        debug("NamingServer channel shutdown");
-
-        for (ManagedChannel channel : stubCache.values().stream().map(stub -> (ManagedChannel) stub.getChannel()).toList()) {
-            debug("channel shutdown" + channel.toString());
-            channel.shutdownNow();
-        }
+    public void closeAllChannels() {
+        channelCache.forEach(ManagedChannel::shutdownNow);
 
         debug("channel shutdown");
     }

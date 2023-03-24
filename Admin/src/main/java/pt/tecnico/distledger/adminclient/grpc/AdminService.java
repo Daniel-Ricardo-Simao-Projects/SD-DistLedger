@@ -10,7 +10,9 @@ import pt.ulisboa.tecnico.distledger.contract.namingserver.NamingServerServiceGr
 import pt.ulisboa.tecnico.distledger.contract.namingserver.NamingServerDistLedger;
 import pt.tecnico.distledger.adminclient.adminExceptions.NoServerAvailableException;
 
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.logging.Logger;
 
@@ -22,9 +24,11 @@ public class AdminService {
 
     private Map<String, AdminServiceGrpc.AdminServiceBlockingStub> stubCache;
 
+    private List<ManagedChannel> channelCache;
+
     private static final String namingServerTarget = "localhost:5001";
 
-    private NamingServerServiceGrpc.NamingServerServiceBlockingStub namingServerStub;
+    private final NamingServerServiceGrpc.NamingServerServiceBlockingStub namingServerStub;
 
     private static void debug(String debugMessage) {
         if (DEBUG_FLAG)
@@ -33,12 +37,14 @@ public class AdminService {
 
     public AdminService(final boolean DEBUG_FLAG) {
 
-        this.DEBUG_FLAG = DEBUG_FLAG;
+        AdminService.DEBUG_FLAG = DEBUG_FLAG;
 
         this.stubCache = new HashMap<>();
+        this.channelCache = new ArrayList<>();
 
         ManagedChannel channel = ManagedChannelBuilder.forTarget(namingServerTarget).usePlaintext().build();
         debug("channel created: " + channel.toString());
+        channelCache.add(channel);
 
         this.namingServerStub = NamingServerServiceGrpc.newBlockingStub(channel);
         debug("stub created" + namingServerStub.toString());
@@ -47,63 +53,69 @@ public class AdminService {
     public AdminServiceGrpc.AdminServiceBlockingStub addStub(NamingServerDistLedger.ServerEntry serverEntry) {
         ManagedChannel channel = ManagedChannelBuilder.forTarget(serverEntry.getTarget()).usePlaintext().build();
         debug("channel created: " + channel.toString());
+        channelCache.add(channel);
 
         AdminServiceGrpc.AdminServiceBlockingStub newStub = AdminServiceGrpc.newBlockingStub(channel);
-
         debug("stub created" + newStub.toString());
 
         stubCache.put(serverEntry.getQualifier(), newStub);
 
-        System.out.println(stubCache);
-
         return newStub;
     }
 
+    private AdminServiceGrpc.AdminServiceBlockingStub getStub(String serverQualifier) throws NoServerAvailableException {
+        AdminServiceGrpc.AdminServiceBlockingStub stub = stubCache.get(serverQualifier);
+        if (stub == null) {
+            stub = lookupService(serverQualifier);
+            stubCache.put(serverQualifier, stub);
+        }
+        debug("getStub returned: " + stub.toString());
+        return stub;
+    }
+
     public AdminServiceGrpc.AdminServiceBlockingStub lookupService(String qualifier) throws NoServerAvailableException {
-        NamingServerDistLedger.LookupRequest request = NamingServerDistLedger.LookupRequest
-                .newBuilder()
+        NamingServerDistLedger.LookupRequest request = NamingServerDistLedger.LookupRequest.newBuilder()
                 .setServiceName("DistLedger")
                 .setQualifier(qualifier)
                 .build();
 
         NamingServerDistLedger.LookupResponse response = namingServerStub.lookup(request);
+        debug("lookupService response: " + response.toString());
 
         if (response.getServerListList().isEmpty()) {
             throw new NoServerAvailableException();
         }
-        else {
-            AdminServiceGrpc.AdminServiceBlockingStub stub = addStub(response.getServerList(0));
-            return stub;
-        }
+        return addStub(response.getServerList(0));
     }
 
-    public void closeChannel() {
-        ManagedChannel namingServerChannel = (ManagedChannel) namingServerStub.getChannel();
-        namingServerChannel.shutdownNow();
-        for (ManagedChannel channel : stubCache.values().stream().map(stub -> (ManagedChannel) stub.getChannel()).toList()) {
-            channel.shutdownNow();
-        }
+    public void closeAllChannels() {
+        channelCache.forEach(ManagedChannel::shutdownNow);
 
         debug("channel shutdown");
     }
 
     public String activateServer(String serverQualifier) {
+        AdminServiceGrpc.AdminServiceBlockingStub stub;
         try {
-            AdminServiceGrpc.AdminServiceBlockingStub stub = getStub(serverQualifier);
+            stub = getStub(serverQualifier);
             return activateRequest(stub);
         } catch (StatusRuntimeException e) {
+            debug("admin received activateServer error status: " + e.getStatus());
             if (e.getStatus().getCode() == Status.UNAVAILABLE.getCode()) {
                 try {
-                    AdminServiceGrpc.AdminServiceBlockingStub stub = lookupService(serverQualifier);
+                    stub = lookupService(serverQualifier);
                     return activateRequest(stub);
                 } catch (NoServerAvailableException exp) {
                     return "Caught exception with description: " + exp.getMessage() + "\n";
+                } catch (StatusRuntimeException exception) {
+                    return "Caught exception with description: " + e.getStatus().getDescription() + "\n";
                 }
+            } else {
+                return "Caught exception with description: " + e.getStatus().getDescription() + "\n";
             }
         } catch (NoServerAvailableException exp) {
             return "Caught exception with description: " + exp.getMessage() + "\n";
         }
-        return "";
     }
 
     public String deactivateServer(String serverQualifier) {
@@ -111,18 +123,22 @@ public class AdminService {
             AdminServiceGrpc.AdminServiceBlockingStub stub = getStub(serverQualifier);
             return deactivateRequest(stub);
         } catch (StatusRuntimeException e) {
+            debug("admin received deactivateServer error status: " + e.getStatus());
             if (e.getStatus().getCode() == Status.UNAVAILABLE.getCode()) {
                 try {
                     AdminServiceGrpc.AdminServiceBlockingStub stub = lookupService(serverQualifier);
                     return deactivateRequest(stub);
                 } catch (NoServerAvailableException exp) {
-                    return "Caught exception with description: " + exp.getMessage() + "\n";
+                    return exp.getMessage() + "\n";
+                } catch (StatusRuntimeException exception) {
+                    return "Caught exception with description: " + e.getStatus().getDescription() + "\n";
                 }
+            } else {
+                return "Caught exception with description: " + e.getStatus().getDescription() + "\n";
             }
         } catch (NoServerAvailableException exp) {
-            return "Caught exception with description: " + exp.getMessage() + "\n";
+            return exp.getMessage() + "\n";
         }
-        return "";
     }
 
     public String getLedgerState(String serverQualifier) {
@@ -130,31 +146,22 @@ public class AdminService {
             AdminServiceGrpc.AdminServiceBlockingStub stub = getStub(serverQualifier);
             return getLedgerStateRequest(stub);
         } catch (StatusRuntimeException e) {
+            debug("admin received getLedgerState error status: " + e.getStatus());
             if (e.getStatus().getCode() == Status.UNAVAILABLE.getCode()) {
                 try {
                     AdminServiceGrpc.AdminServiceBlockingStub stub = lookupService(serverQualifier);
                     return getLedgerStateRequest(stub);
                 } catch (NoServerAvailableException exp) {
-                    return "Caught exception with description: " + exp.getMessage() + "\n";
+                    return exp.getMessage() + "\n";
+                } catch (StatusRuntimeException exception) {
+                    return "Caught exception with description: " + e.getStatus().getDescription() + "\n";
                 }
+            } else {
+                return "Caught exception with description: " + e.getStatus().getDescription() + "\n";
             }
         } catch (NoServerAvailableException exp) {
-            return "Caught exception with description: " + exp.getMessage() + "\n";
+            return exp.getMessage() + "\n";
         }
-        return "";
-    }
-
-    private AdminServiceGrpc.AdminServiceBlockingStub getStub(String serverQualifier) throws NoServerAvailableException {
-        AdminServiceGrpc.AdminServiceBlockingStub stub = stubCache.get(serverQualifier);
-        if (stub == null) {
-            try {
-                stub = lookupService(serverQualifier);
-            } catch (NoServerAvailableException e) {
-                throw e;
-            }
-            stubCache.put(serverQualifier, stub);
-        }
-        return stub;
     }
 
     public String activateRequest(AdminServiceGrpc.AdminServiceBlockingStub stub) {

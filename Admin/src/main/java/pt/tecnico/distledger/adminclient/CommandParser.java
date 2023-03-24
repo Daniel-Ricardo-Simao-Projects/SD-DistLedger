@@ -41,7 +41,7 @@ public class CommandParser {
 
         }
 
-        adminService.closeChannel();
+        adminService.closeAllChannels();
 
     }
 
