@@ -85,6 +85,8 @@ public class UserService {
 
     public void closeAllChannels() {
         channelCache.forEach(ManagedChannel::shutdownNow);
+
+        debug("channel shutdown");
     }
 
     public String createAccountService(String username, String serverQualifier) {
