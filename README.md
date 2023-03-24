@@ -48,6 +48,27 @@ To compile and install all modules:
 mvn clean install
 ```
 
+### How to run the project
+
+1) Open namingServer in its directory
+
+```s
+mvn compile exec:java
+```
+
+2) Open both server in different terminals
+
+```s
+mvn compile exec:java -Dexec.args="2001 A"
+mvn compile exec:java -Dexec.args="2002 B"   
+```
+
+3) Open Admin and User in the corresponding directories
+
+```s
+mvn compile exec:java
+```
+
 ### Debug
 
 To compile and execute with debug:
@@ -58,17 +79,7 @@ mvn clean compile exec:java -Ddebug
 
 ### Tests
 
-To run our tests:
-1) Run server
-
-```s
-mvn clean compile exec:java
-```
-2) Run tests in User
-
-```s
-mvn clean compile verify
-```
+No tests available for this sprint
 
 ## Built With
 
