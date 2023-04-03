@@ -25,7 +25,7 @@ public class UserServiceImpl extends UserServiceGrpc.UserServiceImplBase {
 
     public UserServiceImpl(ServerState serverState, final boolean DEBUG_FLAG) {
         this.serverState = serverState;
-        this.DEBUG_FLAG = DEBUG_FLAG;
+        UserServiceImpl.DEBUG_FLAG = DEBUG_FLAG;
     }
 
     @Override
@@ -45,34 +45,6 @@ public class UserServiceImpl extends UserServiceGrpc.UserServiceImplBase {
         } catch (AccountAlreadyExistsException e) {
             debug(e.getMessage(request.getUserId()));
             responseObserver.onError(ALREADY_EXISTS.withDescription(e.getMessage(request.getUserId())).asRuntimeException());
-
-        } catch (ServerUnavailableException | WriteNotSupportedException | CouldNotPropagateException e) {
-            debug(e.getMessage());
-            responseObserver.onError(UNAVAILABLE.withDescription(e.getMessage()).asRuntimeException());
-        }
-    }
-
-    @Override
-    public void deleteAccount(UserDistLedger.DeleteAccountRequest request, StreamObserver<UserDistLedger.DeleteAccountResponse> responseObserver) {
-
-        debug("Received delete account request of user " + request.getUserId());
-
-        try {
-            serverState.deleteAccount(request.getUserId(), false);
-
-            UserDistLedger.DeleteAccountResponse response = UserDistLedger.DeleteAccountResponse.newBuilder().build();
-            debug("Sending delete account response for user " + request.getUserId());
-
-            responseObserver.onNext(response);
-            responseObserver.onCompleted();
-
-        } catch (AccountDoesntExistException e) {
-            debug(e.getMessage(request.getUserId()));
-            responseObserver.onError(NOT_FOUND.withDescription(e.getMessage(request.getUserId())).asRuntimeException());
-
-        } catch (BalanceIsntZeroException | CannotRemoveBrokerException e) {
-            debug(e.getMessage());
-            responseObserver.onError(PERMISSION_DENIED.withDescription(e.getMessage()).asRuntimeException());
 
         } catch (ServerUnavailableException | WriteNotSupportedException | CouldNotPropagateException e) {
             debug(e.getMessage());

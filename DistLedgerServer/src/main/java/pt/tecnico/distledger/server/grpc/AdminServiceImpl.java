@@ -8,7 +8,6 @@ import pt.ulisboa.tecnico.distledger.contract.DistLedgerCommonDefinitions;
 import pt.ulisboa.tecnico.distledger.contract.admin.AdminDistLedger;
 import pt.ulisboa.tecnico.distledger.contract.admin.AdminServiceGrpc;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.logging.Logger;
 
@@ -27,7 +26,7 @@ public class AdminServiceImpl extends AdminServiceGrpc.AdminServiceImplBase {
 
     public AdminServiceImpl(ServerState serverState, final boolean DEBUG_FLAG) {
         this.serverState = serverState;
-        this.DEBUG_FLAG = DEBUG_FLAG;
+        AdminServiceImpl.DEBUG_FLAG = DEBUG_FLAG;
     }
 
     @Override

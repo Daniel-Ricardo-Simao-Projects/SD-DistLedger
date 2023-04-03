@@ -8,7 +8,6 @@ public class CommandParser {
 
     private static final String SPACE = " ";
     private static final String CREATE_ACCOUNT = "createAccount";
-    private static final String DELETE_ACCOUNT = "deleteAccount";
     private static final String TRANSFER_TO = "transferTo";
     private static final String BALANCE = "balance";
     private static final String HELP = "help";
@@ -33,7 +32,6 @@ public class CommandParser {
             try{
                 switch (cmd) {
                     case CREATE_ACCOUNT -> this.createAccount(line);
-                    case DELETE_ACCOUNT -> this.deleteAccount(line);
                     case TRANSFER_TO -> this.transferTo(line);
                     case BALANCE -> this.balance(line);
                     case HELP -> this.printUsage();
@@ -62,19 +60,6 @@ public class CommandParser {
         String username = split[2];
 
         System.out.println(userService.createAccountService(username, server));
-    }
-
-    private void deleteAccount(String line){
-        String[] split = line.split(SPACE);
-
-        if (split.length != 3){
-            this.printUsage();
-            return;
-        }
-        String server = split[1];
-        String username = split[2];
-
-        System.out.println(userService.deleteAccountService(username, server));
     }
 
     private void balance(String line){
@@ -106,11 +91,12 @@ public class CommandParser {
     }
 
     private void printUsage() {
-        System.out.println("Usage:\n" +
-                        "- createAccount <server> <username>\n" +
-                        "- deleteAccount <server> <username>\n" +
-                        "- balance <server> <username>\n" +
-                        "- transferTo <server> <username_from> <username_to> <amount>\n" +
-                        "- exit\n");
+        System.out.println("""
+                Usage:
+                - createAccount <server> <username>
+                - balance <server> <username>
+                - transferTo <server> <username_from> <username_to> <amount>
+                - exit
+                """);
     }
 }

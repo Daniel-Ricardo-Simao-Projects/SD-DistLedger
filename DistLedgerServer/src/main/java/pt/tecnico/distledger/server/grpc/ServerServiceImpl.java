@@ -26,7 +26,7 @@ public class ServerServiceImpl extends DistLedgerCrossServerServiceGrpc.DistLedg
 
     public ServerServiceImpl(ServerState serverState, final boolean DEBUG_FLAG) {
         this.serverState = serverState;
-        this.DEBUG_FLAG = DEBUG_FLAG;
+        ServerServiceImpl.DEBUG_FLAG = DEBUG_FLAG;
     }
 
     @Override

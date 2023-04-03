@@ -39,7 +39,7 @@ public class ServerService {
         namingServerStub = NamingServerServiceGrpc.newBlockingStub(namingChannel);
         this.stubCache = new HashMap<>();
         this.channelCache = new HashMap<>();
-        this.DEBUG_FLAG = DEBUG_FLAG;
+        ServerService.DEBUG_FLAG = DEBUG_FLAG;
     }
 
     public void closeChannel() {
@@ -85,8 +85,7 @@ public class ServerService {
             throw new NoServerAvailableException();
         }
         else {
-            DistLedgerCrossServerServiceGrpc.DistLedgerCrossServerServiceBlockingStub stub = addStub(response.getServerList(0));
-            return stub;
+            return addStub(response.getServerList(0));
         }
     }
 

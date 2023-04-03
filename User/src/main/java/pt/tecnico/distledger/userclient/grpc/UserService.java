@@ -124,30 +124,6 @@ public class UserService {
         }
     }
 
-    public String deleteAccountService(String username, String serverQualifier) {
-        UserServiceGrpc.UserServiceBlockingStub stub;
-        try {
-            stub = getStub(serverQualifier);
-            return deleteAccountRequest(stub, username);
-        } catch (StatusRuntimeException e) {
-            debug("user received deleteAccount error status: " + e.getStatus());
-            if (e.getStatus().getCode() == Status.UNAVAILABLE.getCode()) {
-                try {
-                    stub = lookupService(serverQualifier);
-                    return deleteAccountRequest(stub, username);
-                } catch (NoServerAvailableException noServer) {
-                    return e.getMessage() + "\n";
-                } catch (StatusRuntimeException exception) {
-                    return "Caught exception with description: " + e.getStatus().getDescription() + "\n";
-                }
-            } else {
-                return "Caught exception with description: " + e.getStatus().getDescription() + "\n";
-            }
-        } catch (NoServerAvailableException e) {
-            return e.getMessage() + "\n";
-        }
-    }
-
     public String getBalanceService(String username, String serverQualifier) {
         UserServiceGrpc.UserServiceBlockingStub stub;
         try {
@@ -201,14 +177,6 @@ public class UserService {
                 .setUserId(username)
                 .build();
         UserDistLedger.CreateAccountResponse response = stub.createAccount(request);
-        return "OK" + response.toString() + "\n";
-    }
-
-    public String deleteAccountRequest(UserServiceGrpc.UserServiceBlockingStub stub, String username) {
-        UserDistLedger.DeleteAccountRequest request = UserDistLedger.DeleteAccountRequest.newBuilder()
-                .setUserId(username)
-                .build();
-        UserDistLedger.DeleteAccountResponse response = stub.deleteAccount(request);
         return "OK" + response.toString() + "\n";
     }
 
