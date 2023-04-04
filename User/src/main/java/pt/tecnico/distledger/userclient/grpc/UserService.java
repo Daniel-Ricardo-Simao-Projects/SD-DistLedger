@@ -19,9 +19,11 @@ public class UserService {
 
     private static final Logger logger = Logger.getLogger(UserService.class.getName());
 
-    private Map<String, UserServiceGrpc.UserServiceBlockingStub> stubCache;
+    private final Map<String, UserServiceGrpc.UserServiceBlockingStub> stubCache;
 
-    private Map<String, ManagedChannel> channelCache;
+    private final Map<String, ManagedChannel> channelCache;
+
+    private final Map<String, Integer> prevTS;
 
     private static final String namingServerTarget = "localhost:5001";
 
@@ -36,6 +38,7 @@ public class UserService {
 
         this.stubCache = new HashMap<>();
         this.channelCache = new HashMap<>();
+        this.prevTS = new HashMap<>();
 
         ManagedChannel channel = ManagedChannelBuilder.forTarget(namingServerTarget).usePlaintext().build();
         debug("naming channel created: " + channel.toString());
@@ -43,7 +46,6 @@ public class UserService {
 
         this.namingServerStub = NamingServerServiceGrpc.newBlockingStub(channel);
         debug("naming stub created: " + namingServerStub.toString());
-
     }
 
     public UserServiceGrpc.UserServiceBlockingStub addStub(NamingServerDistLedger.ServerEntry serverEntry) {
@@ -92,9 +94,7 @@ public class UserService {
     }
 
     public void closeAllChannels() {
-        channelCache.forEach((namingServer, channel) -> {
-            channel.shutdownNow();
-        });
+        channelCache.forEach((namingServer, channel) -> channel.shutdownNow());
         channelCache.clear();
 
         debug("All channels shutdown");
@@ -175,23 +175,27 @@ public class UserService {
     public String createAccountRequest(UserServiceGrpc.UserServiceBlockingStub stub, String username) {
         UserDistLedger.CreateAccountRequest request = UserDistLedger.CreateAccountRequest.newBuilder()
                 .setUserId(username)
+                .addAllPrevTS(this.prevTS.values())
                 .build();
         UserDistLedger.CreateAccountResponse response = stub.createAccount(request);
         return "OK" + response.toString() + "\n";
     }
 
     public String getBalanceRequest(UserServiceGrpc.UserServiceBlockingStub stub, String username) {
-        UserDistLedger.BalanceRequest request = UserDistLedger.BalanceRequest.newBuilder().setUserId(username).build();
+        UserDistLedger.BalanceRequest request = UserDistLedger.BalanceRequest.newBuilder()
+                .setUserId(username)
+                .addAllPrevTS(this.prevTS.values())
+                .build();
         UserDistLedger.BalanceResponse response = stub.balance(request);
         return "OK\n" + response.getValue() + "\n";
     }
 
     public String transferToRequest(UserServiceGrpc.UserServiceBlockingStub stub, String fromUsername, String toUsername, int amount) {
-        UserDistLedger.TransferToRequest request = UserDistLedger.TransferToRequest
-                .newBuilder()
+        UserDistLedger.TransferToRequest request = UserDistLedger.TransferToRequest.newBuilder()
                 .setAccountFrom(fromUsername)
                 .setAccountTo(toUsername)
                 .setAmount(amount)
+                .addAllPrevTS(this.prevTS.values())
                 .build();
 
         UserDistLedger.TransferToResponse response = stub.transferTo(request);

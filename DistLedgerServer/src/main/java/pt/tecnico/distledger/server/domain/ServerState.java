@@ -1,7 +1,6 @@
 package pt.tecnico.distledger.server.domain;
 
 import pt.tecnico.distledger.server.domain.operation.CreateOp;
-import pt.tecnico.distledger.server.domain.operation.DeleteOp;
 import pt.tecnico.distledger.server.domain.operation.Operation;
 import pt.tecnico.distledger.server.domain.operation.TransferOp;
 import pt.tecnico.distledger.server.grpc.ServerService;
@@ -15,19 +14,22 @@ public class ServerState {
 
     private static final int INACTIVE = 0;
 
-    private List<Operation> ledger;
+    private final List<Operation> ledger;
 
-    private Map<String, Integer> accounts;
+    private final Map<String, Integer> accounts;
+
+    private final Map<String, Integer> TS;
 
     private int status;
 
-    private String qualifier;
+    private final String qualifier;
 
-    private ServerService serverService;
+    private final ServerService serverService;
 
     public ServerState(ServerService serverService, String qualifier) {
         this.ledger = new ArrayList<>();
         this.accounts = new HashMap<>();
+        this.TS = new HashMap<>();
         this.status = ACTIVE;
         this.accounts.put("broker", 1000);
         this.qualifier = qualifier;
@@ -55,33 +57,6 @@ public class ServerState {
         ledger.add(createOp);
     }
 
-    public synchronized void deleteAccount(String userId, boolean isPropagation) throws BalanceIsntZeroException, AccountDoesntExistException,
-            CannotRemoveBrokerException, ServerUnavailableException, WriteNotSupportedException, CouldNotPropagateException {
-        if(qualifier.equals("B") && !isPropagation) {
-            throw new WriteNotSupportedException();
-        }
-
-        if (isInactive()) { throw new ServerUnavailableException(); }
-
-        if (isBroker(userId)) { throw new CannotRemoveBrokerException(); }
-
-        Integer balance = accounts.get(userId);
-
-        if (balance == null) { throw new AccountDoesntExistException(); }
-        else if (balance != 0) { throw new BalanceIsntZeroException(); }
-        else {
-            DeleteOp deleteOp = new DeleteOp(userId);
-            if(qualifier.equals("A") && !isPropagation) {
-                if(!serverService.propagateStateService(deleteOp)) {
-                    throw new CouldNotPropagateException();
-                }
-            }
-
-            accounts.remove(userId);
-            ledger.add(deleteOp);
-        }
-    }
-
     public synchronized int getBalanceById(String userId) throws AccountDoesntExistException, ServerUnavailableException {
         if (isInactive()) { throw new ServerUnavailableException(); }
 
@@ -92,8 +67,8 @@ public class ServerState {
         return balance;
     }
 
-    public synchronized void transferTo(String userId, String destAccount, int amount, boolean isPropagation)
-            throws ServerUnavailableException, DestAccountEqualToFromAccountException, AccountDoesntExistException,
+    public synchronized void transferTo(String userId, String destAccount, int amount, boolean isPropagation) throws
+            ServerUnavailableException, DestAccountEqualToFromAccountException, AccountDoesntExistException,
             DestAccountDoesntExistException, TransferBiggerThanBalanceException, WriteNotSupportedException,
             CouldNotPropagateException, InvalidAmountException {
         if(qualifier.equals("B") && !isPropagation) {
@@ -130,7 +105,10 @@ public class ServerState {
 
     public List<Operation> getLedgerState() { return ledger; }
 
+    public Collection<Integer> getTS() { return TS.values(); }
+
     private boolean isInactive() { return status == INACTIVE; }
 
     private boolean isBroker(String userId) { return "broker".equals(userId); }
+
 }

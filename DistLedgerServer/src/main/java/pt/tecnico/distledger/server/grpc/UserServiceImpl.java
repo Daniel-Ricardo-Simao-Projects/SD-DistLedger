@@ -12,15 +12,14 @@ import static io.grpc.Status.*;
 
 public class UserServiceImpl extends UserServiceGrpc.UserServiceImplBase {
 
-    private ServerState serverState;
+    private final ServerState serverState;
 
     private static boolean DEBUG_FLAG;
 
     private static final Logger logger = Logger.getLogger(UserServiceImpl.class.getName());
 
     private static void debug(String debugMessage) {
-        if (DEBUG_FLAG)
-            logger.info(debugMessage);
+        if (DEBUG_FLAG) logger.info(debugMessage);
     }
 
     public UserServiceImpl(ServerState serverState, final boolean DEBUG_FLAG) {
@@ -36,7 +35,9 @@ public class UserServiceImpl extends UserServiceGrpc.UserServiceImplBase {
         try {
             serverState.createAccount(request.getUserId(), false);
 
-            UserDistLedger.CreateAccountResponse response = UserDistLedger.CreateAccountResponse.newBuilder().build();
+            UserDistLedger.CreateAccountResponse response = UserDistLedger.CreateAccountResponse.newBuilder()
+                    .addAllTS(serverState.getTS())
+                    .build();
             debug("Sending create account response for user " + request.getUserId());
 
             responseObserver.onNext(response);
@@ -61,7 +62,9 @@ public class UserServiceImpl extends UserServiceGrpc.UserServiceImplBase {
             int value = serverState.getBalanceById(request.getUserId());
 
             UserDistLedger.BalanceResponse response = UserDistLedger.BalanceResponse.newBuilder()
-                    .setValue(value).build();
+                    .setValue(value)
+                    .addAllValueTS(serverState.getTS())
+                    .build();
             debug("Sending balance response for user " + request.getUserId() + " : " + value);
 
             responseObserver.onNext(response);
@@ -86,7 +89,9 @@ public class UserServiceImpl extends UserServiceGrpc.UserServiceImplBase {
         try {
             serverState.transferTo(request.getAccountFrom(), request.getAccountTo(), request.getAmount(), false);
 
-            UserDistLedger.TransferToResponse response = UserDistLedger.TransferToResponse.newBuilder().build();
+            UserDistLedger.TransferToResponse response = UserDistLedger.TransferToResponse.newBuilder()
+                    .addAllTS(serverState.getTS())
+                    .build();
             debug("Sending transferTo response from user " + request.getAccountFrom() +
                         " to user " + request.getAccountTo() + " of an amount of " + request.getAmount());
 

@@ -45,9 +45,6 @@ public class ServerServiceImpl extends DistLedgerCrossServerServiceGrpc.DistLedg
             if (operationType.equals(DistLedgerCommonDefinitions.OperationType.OP_CREATE_ACCOUNT)) {
                 debug("Received create account request with username " + userId);
                 serverState.createAccount(userId, true);
-            } else if (operationType.equals(DistLedgerCommonDefinitions.OperationType.OP_DELETE_ACCOUNT)) {
-                debug("Received delete account request of user " + userId);
-                serverState.deleteAccount(userId, true);
             } else if (operationType.equals(DistLedgerCommonDefinitions.OperationType.OP_TRANSFER_TO)) {
                 debug("Received transfer request from user " + operation.getUserId() +
                         " to user " + operation.getDestUserId());
@@ -71,10 +68,6 @@ public class ServerServiceImpl extends DistLedgerCrossServerServiceGrpc.DistLedg
             debug(e.getMessage(userId));
             responseObserver.onError(NOT_FOUND.withDescription(e.getMessage(userId)).asRuntimeException());
 
-        } catch (BalanceIsntZeroException | CannotRemoveBrokerException e) {
-            debug(e.getMessage());
-            responseObserver.onError(PERMISSION_DENIED.withDescription(e.getMessage()).asRuntimeException());
-
         } catch (DestAccountEqualToFromAccountException e) {
             debug(e.getMessage(operation.getUserId(), operation.getDestUserId()));
             responseObserver.onError(INVALID_ARGUMENT.withDescription(e.getMessage(operation.getDestUserId(), operation.getUserId())).asRuntimeException());
@@ -90,7 +83,6 @@ public class ServerServiceImpl extends DistLedgerCrossServerServiceGrpc.DistLedg
         } catch (TransferBiggerThanBalanceException e) {
             debug(e.getMessage(operation.getAmount()));
             responseObserver.onError(PERMISSION_DENIED.withDescription(e.getMessage(operation.getAmount())).asRuntimeException());
-
         }
 
     }
