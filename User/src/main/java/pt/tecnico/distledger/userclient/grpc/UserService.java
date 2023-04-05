@@ -23,7 +23,7 @@ public class UserService {
 
     private final Map<String, ManagedChannel> channelCache;
 
-    private final Map<String, Integer> prevTS;
+    private final Map<Character, Integer> prevTS;
 
     private static final String namingServerTarget = "localhost:5001";
 
@@ -177,7 +177,9 @@ public class UserService {
                 .setUserId(username)
                 .addAllPrevTS(this.prevTS.values())
                 .build();
+
         UserDistLedger.CreateAccountResponse response = stub.createAccount(request);
+        updatePrevTS(response.getTSList());
         return "OK" + response.toString() + "\n";
     }
 
@@ -186,7 +188,9 @@ public class UserService {
                 .setUserId(username)
                 .addAllPrevTS(this.prevTS.values())
                 .build();
+
         UserDistLedger.BalanceResponse response = stub.balance(request);
+        updatePrevTS(response.getValueTSList());
         return "OK\n" + response.getValue() + "\n";
     }
 
@@ -199,7 +203,16 @@ public class UserService {
                 .build();
 
         UserDistLedger.TransferToResponse response = stub.transferTo(request);
+        updatePrevTS(response.getTSList());
         return "OK" + response.toString() + "\n";
+    }
+
+    public void updatePrevTS(List<Integer> TS) {
+        for (int i = 0; i < TS.size(); i++) {
+            char key = (char) ('A' + i);
+            if (TS.get(i) > prevTS.get(key))
+                prevTS.put(key, TS.get(i));
+        }
     }
 
 }
