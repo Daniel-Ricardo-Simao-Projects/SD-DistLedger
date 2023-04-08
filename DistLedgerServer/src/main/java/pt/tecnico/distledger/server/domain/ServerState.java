@@ -18,7 +18,7 @@ public class ServerState {
 
     private final Map<String, Integer> accounts;
 
-    private final Map<String, Integer> TS;
+    private final List<Integer> TS;
 
     private int status;
 
@@ -29,7 +29,7 @@ public class ServerState {
     public ServerState(ServerService serverService, String qualifier) {
         this.ledger = new ArrayList<>();
         this.accounts = new HashMap<>();
-        this.TS = new HashMap<>();
+        this.TS = Arrays.asList(0, 0);
         this.status = ACTIVE;
         this.accounts.put("broker", 1000);
         this.qualifier = qualifier;
@@ -105,7 +105,9 @@ public class ServerState {
 
     public List<Operation> getLedgerState() { return ledger; }
 
-    public Collection<Integer> getTS() { return TS.values(); }
+    public List<Integer> getTS() {
+        return TS;
+    }
 
     private boolean isInactive() { return status == INACTIVE; }
 

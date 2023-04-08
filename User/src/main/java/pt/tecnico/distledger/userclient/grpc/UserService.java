@@ -23,7 +23,7 @@ public class UserService {
 
     private final Map<String, ManagedChannel> channelCache;
 
-    private final Map<Character, Integer> prevTS;
+    private final List<Integer> prevTS;
 
     private static final String namingServerTarget = "localhost:5001";
 
@@ -38,7 +38,7 @@ public class UserService {
 
         this.stubCache = new HashMap<>();
         this.channelCache = new HashMap<>();
-        this.prevTS = new HashMap<>();
+        this.prevTS = Arrays.asList(0, 0);
 
         ManagedChannel channel = ManagedChannelBuilder.forTarget(namingServerTarget).usePlaintext().build();
         debug("naming channel created: " + channel.toString());
@@ -175,7 +175,7 @@ public class UserService {
     public String createAccountRequest(UserServiceGrpc.UserServiceBlockingStub stub, String username) {
         UserDistLedger.CreateAccountRequest request = UserDistLedger.CreateAccountRequest.newBuilder()
                 .setUserId(username)
-                .addAllPrevTS(this.prevTS.values())
+                .addAllPrevTS(this.prevTS)
                 .build();
 
         UserDistLedger.CreateAccountResponse response = stub.createAccount(request);
@@ -186,7 +186,7 @@ public class UserService {
     public String getBalanceRequest(UserServiceGrpc.UserServiceBlockingStub stub, String username) {
         UserDistLedger.BalanceRequest request = UserDistLedger.BalanceRequest.newBuilder()
                 .setUserId(username)
-                .addAllPrevTS(this.prevTS.values())
+                .addAllPrevTS(this.prevTS)
                 .build();
 
         UserDistLedger.BalanceResponse response = stub.balance(request);
@@ -199,7 +199,7 @@ public class UserService {
                 .setAccountFrom(fromUsername)
                 .setAccountTo(toUsername)
                 .setAmount(amount)
-                .addAllPrevTS(this.prevTS.values())
+                .addAllPrevTS(this.prevTS)
                 .build();
 
         UserDistLedger.TransferToResponse response = stub.transferTo(request);
@@ -208,10 +208,9 @@ public class UserService {
     }
 
     public void updatePrevTS(List<Integer> TS) {
-        for (int i = 0; i < TS.size(); i++) {
-            char key = (char) ('A' + i);
-            if (TS.get(i) > prevTS.get(key))
-                prevTS.put(key, TS.get(i));
+        for (int i = 0; i < prevTS.size(); i++) {
+            if (TS.get(i) > prevTS.get(i))
+                prevTS.set(i, TS.get(i));
         }
     }
 
