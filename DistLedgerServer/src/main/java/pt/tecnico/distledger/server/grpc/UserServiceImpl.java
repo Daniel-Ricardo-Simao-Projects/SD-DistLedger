@@ -59,7 +59,7 @@ public class UserServiceImpl extends UserServiceGrpc.UserServiceImplBase {
         debug("Received balance request for user " + request.getUserId());
 
         try {
-            int value = serverState.getBalanceById(request.getUserId());
+            int value = serverState.getBalanceById(request.getUserId(), request.getPrevTSList());
 
             UserDistLedger.BalanceResponse response = UserDistLedger.BalanceResponse.newBuilder()
                     .setValue(value)
@@ -74,7 +74,7 @@ public class UserServiceImpl extends UserServiceGrpc.UserServiceImplBase {
             debug(e.getMessage(request.getUserId()));
             responseObserver.onError(NOT_FOUND.withDescription(e.getMessage(request.getUserId())).asRuntimeException());
 
-        } catch (ServerUnavailableException e) {
+        } catch (ServerUnavailableException | UserIsAheadOfServerException e) {
             debug(e.getMessage());
             responseObserver.onError(UNAVAILABLE.withDescription(e.getMessage()).asRuntimeException());
         }

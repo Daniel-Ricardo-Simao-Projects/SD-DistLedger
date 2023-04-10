@@ -20,6 +20,8 @@ public class ServerState {
 
     private final List<Integer> TS;
 
+    private final List<Integer> valueTS;
+
     private int status;
 
     private final String qualifier;
@@ -30,6 +32,7 @@ public class ServerState {
         this.ledger = new ArrayList<>();
         this.accounts = new HashMap<>();
         this.TS = Arrays.asList(0, 0);
+        this.valueTS = Arrays.asList(0, 0);
         this.status = ACTIVE;
         this.accounts.put("broker", 1000);
         this.qualifier = qualifier;
@@ -57,12 +60,14 @@ public class ServerState {
         ledger.add(createOp);
     }
 
-    public synchronized int getBalanceById(String userId) throws AccountDoesntExistException, ServerUnavailableException {
+    public synchronized int getBalanceById(String userId, List<Integer> prevTS) throws AccountDoesntExistException, ServerUnavailableException, UserIsAheadOfServerException {
         if (isInactive()) { throw new ServerUnavailableException(); }
 
         Integer balance = accounts.get(userId);
 
         if (balance == null) { throw new AccountDoesntExistException(); }
+
+        if (!isLessOrEqual(prevTS, valueTS)) { throw new UserIsAheadOfServerException(); }
 
         return balance;
     }
@@ -109,7 +114,20 @@ public class ServerState {
         return TS;
     }
 
+    public List<Integer> getValueTS() {
+        return valueTS;
+    }
+
     private boolean isInactive() { return status == INACTIVE; }
+
+    private boolean isLessOrEqual(List<Integer> TS1, List<Integer> TS2) {
+        for (int i = 0; i < TS1.size(); i++) {
+            if (TS1.get(i) > TS2.get(i)) {
+                return false;
+            }
+        }
+        return true;
+    }
 
     private boolean isBroker(String userId) { return "broker".equals(userId); }
 
