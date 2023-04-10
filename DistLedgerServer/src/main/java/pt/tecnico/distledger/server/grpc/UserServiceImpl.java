@@ -33,10 +33,10 @@ public class UserServiceImpl extends UserServiceGrpc.UserServiceImplBase {
         debug("Received create account request with username " + request.getUserId());
 
         try {
-            serverState.createAccount(request.getUserId(), false);
+            serverState.createAccount(request.getUserId(), false, request.getPrevTSList());
 
             UserDistLedger.CreateAccountResponse response = UserDistLedger.CreateAccountResponse.newBuilder()
-                    .addAllTS(serverState.getTS())
+                    .addAllTS(serverState.getReplicaTS())
                     .build();
             debug("Sending create account response for user " + request.getUserId());
 
@@ -63,7 +63,7 @@ public class UserServiceImpl extends UserServiceGrpc.UserServiceImplBase {
 
             UserDistLedger.BalanceResponse response = UserDistLedger.BalanceResponse.newBuilder()
                     .setValue(value)
-                    .addAllValueTS(serverState.getTS())
+                    .addAllValueTS(serverState.getReplicaTS())
                     .build();
             debug("Sending balance response for user " + request.getUserId() + " : " + value);
 
@@ -87,10 +87,10 @@ public class UserServiceImpl extends UserServiceGrpc.UserServiceImplBase {
                     " to user " + request.getAccountTo());
 
         try {
-            serverState.transferTo(request.getAccountFrom(), request.getAccountTo(), request.getAmount(), false);
+            serverState.transferTo(request.getAccountFrom(), request.getAccountTo(), request.getAmount(), false, request.getPrevTSList());
 
             UserDistLedger.TransferToResponse response = UserDistLedger.TransferToResponse.newBuilder()
-                    .addAllTS(serverState.getTS())
+                    .addAllTS(serverState.getReplicaTS())
                     .build();
             debug("Sending transferTo response from user " + request.getAccountFrom() +
                         " to user " + request.getAccountTo() + " of an amount of " + request.getAmount());

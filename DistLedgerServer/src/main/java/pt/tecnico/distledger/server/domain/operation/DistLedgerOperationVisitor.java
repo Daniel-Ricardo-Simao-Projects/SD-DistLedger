@@ -22,15 +22,6 @@ public class DistLedgerOperationVisitor implements OperationVisitor {
     }
 
     @Override
-    public void visitDeleteOp(DeleteOp operation) {
-        DistLedgerCommonDefinitions.Operation distLedgerOperation = DistLedgerCommonDefinitions.Operation.newBuilder()
-                .setType(DistLedgerCommonDefinitions.OperationType.OP_DELETE_ACCOUNT)
-                .setUserId(operation.getAccount())
-                .build();
-        distLedgerOperations.add(distLedgerOperation);
-    }
-
-    @Override
     public void visitTransferOp(TransferOp operation) {
         DistLedgerCommonDefinitions.Operation distLedgerOperation = DistLedgerCommonDefinitions.Operation.newBuilder()
                 .setType(DistLedgerCommonDefinitions.OperationType.OP_TRANSFER_TO)

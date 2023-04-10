@@ -18,7 +18,7 @@ public class ServerState {
 
     private final Map<String, Integer> accounts;
 
-    private final List<Integer> TS;
+    private final List<Integer> replicaTS;
 
     private final List<Integer> valueTS;
 
@@ -31,7 +31,7 @@ public class ServerState {
     public ServerState(ServerService serverService, String qualifier) {
         this.ledger = new ArrayList<>();
         this.accounts = new HashMap<>();
-        this.TS = Arrays.asList(0, 0);
+        this.replicaTS = Arrays.asList(0, 0);
         this.valueTS = Arrays.asList(0, 0);
         this.status = ACTIVE;
         this.accounts.put("broker", 1000);
@@ -39,7 +39,7 @@ public class ServerState {
         this.serverService = serverService;
     }
 
-    public synchronized void createAccount(String userId, boolean isPropagation) throws AccountAlreadyExistsException,
+    public synchronized void createAccount(String userId, boolean isPropagation, List<Integer> prevTS) throws AccountAlreadyExistsException,
             ServerUnavailableException, WriteNotSupportedException, CouldNotPropagateException {
         if(qualifier.equals("B") && !isPropagation) {
             throw new WriteNotSupportedException();
@@ -49,12 +49,13 @@ public class ServerState {
 
         if (accounts.containsKey(userId)) { throw new AccountAlreadyExistsException(); }
 
-        CreateOp createOp = new CreateOp(userId);
+        CreateOp createOp = new CreateOp(userId, prevTS, this.replicaTS);
         if(qualifier.equals("A") && !isPropagation) {
             if (!serverService.propagateStateService(createOp)) {
                 throw new CouldNotPropagateException();
             }
         }
+
 
         accounts.put(userId, 0);
         ledger.add(createOp);
@@ -72,7 +73,7 @@ public class ServerState {
         return balance;
     }
 
-    public synchronized void transferTo(String userId, String destAccount, int amount, boolean isPropagation) throws
+    public synchronized void transferTo(String userId, String destAccount, int amount, boolean isPropagation, List<Integer> prevTS) throws
             ServerUnavailableException, DestAccountEqualToFromAccountException, AccountDoesntExistException,
             DestAccountDoesntExistException, TransferBiggerThanBalanceException, WriteNotSupportedException,
             CouldNotPropagateException, InvalidAmountException {
@@ -91,7 +92,7 @@ public class ServerState {
         if (amount <= 0) { throw new InvalidAmountException(); }
         if (senderBalance < amount) { throw new TransferBiggerThanBalanceException(); }
 
-        TransferOp transferOp = new TransferOp(userId, destAccount, amount);
+        TransferOp transferOp = new TransferOp(userId, destAccount, amount, prevTS, this.replicaTS);
         if(qualifier.equals("A") && !isPropagation) {
             if(!serverService.propagateStateService(transferOp)) {
                 throw new CouldNotPropagateException();
@@ -110,8 +111,8 @@ public class ServerState {
 
     public List<Operation> getLedgerState() { return ledger; }
 
-    public List<Integer> getTS() {
-        return TS;
+    public List<Integer> getReplicaTS() {
+        return replicaTS;
     }
 
     public List<Integer> getValueTS() {
@@ -130,5 +131,4 @@ public class ServerState {
     }
 
     private boolean isBroker(String userId) { return "broker".equals(userId); }
-
 }
