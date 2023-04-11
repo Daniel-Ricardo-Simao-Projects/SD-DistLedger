@@ -174,6 +174,29 @@ public class AdminService {
         }
     }
 
+    public String gossip(String serverQualifier) {
+        try {
+            AdminServiceGrpc.AdminServiceBlockingStub stub = getStub(serverQualifier);
+            return gossipRequest(stub);
+        } catch (StatusRuntimeException e) {
+            debug("admin received gossip error status: " + e.getStatus());
+            if (e.getStatus().getCode() == Status.UNAVAILABLE.getCode()) {
+                try {
+                    AdminServiceGrpc.AdminServiceBlockingStub stub = lookupService(serverQualifier);
+                    return gossipRequest(stub);
+                } catch (NoServerAvailableException exp) {
+                    return exp.getMessage() + "\n";
+                } catch (StatusRuntimeException exception) {
+                    return "Caught exception with description: " + e.getStatus().getDescription() + "\n";
+                }
+            } else {
+                return "Caught exception with description: " + e.getStatus().getDescription() + "\n";
+            }
+        } catch (NoServerAvailableException exp) {
+            return exp.getMessage() + "\n";
+        }
+    }
+
     public String activateRequest(AdminServiceGrpc.AdminServiceBlockingStub stub) {
         AdminDistLedger.ActivateRequest request = AdminDistLedger.ActivateRequest.newBuilder().build();
         AdminDistLedger.ActivateResponse response = stub.activate(request);
@@ -188,6 +211,11 @@ public class AdminService {
     public String getLedgerStateRequest(AdminServiceGrpc.AdminServiceBlockingStub stub) {
         AdminDistLedger.getLedgerStateRequest request = AdminDistLedger.getLedgerStateRequest.newBuilder().build();
         AdminDistLedger.getLedgerStateResponse response = stub.getLedgerState(request);
+        return "OK\n" + response.toString();
+    }
+    public String gossipRequest(AdminServiceGrpc.AdminServiceBlockingStub stub) {
+        AdminDistLedger.GossipRequest request = AdminDistLedger.GossipRequest.newBuilder().build();
+        AdminDistLedger.GossipResponse response = stub.gossip(request);
         return "OK\n" + response.toString();
     }
 }

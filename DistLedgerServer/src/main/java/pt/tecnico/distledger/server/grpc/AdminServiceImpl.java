@@ -85,4 +85,19 @@ public class AdminServiceImpl extends AdminServiceGrpc.AdminServiceImplBase {
         responseObserver.onNext(response);
         responseObserver.onCompleted();
     }
+
+    @Override
+    public void gossip(AdminDistLedger.GossipRequest request, StreamObserver<AdminDistLedger.GossipResponse> responseObserver) {
+
+        debug("Received gossip request from admin");
+
+        serverState.gossip();
+
+        AdminDistLedger.GossipResponse response = AdminDistLedger.GossipResponse.newBuilder().build();
+
+        debug("Sending gossip response for admin");
+
+        responseObserver.onNext(response);
+        responseObserver.onCompleted();
+    }
 }

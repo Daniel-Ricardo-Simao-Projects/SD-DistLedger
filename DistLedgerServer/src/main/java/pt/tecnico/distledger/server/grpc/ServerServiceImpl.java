@@ -33,8 +33,9 @@ public class ServerServiceImpl extends DistLedgerCrossServerServiceGrpc.DistLedg
     public void propagateState(CrossServerDistLedger.PropagateStateRequest request,
                                StreamObserver<CrossServerDistLedger.PropagateStateResponse> responseObserver) {
 
-        DistLedgerCommonDefinitions.LedgerState ledgerState = request.getState();
+        serverState.applyGossip(request.getState(), request.getReplicaTSList());
 
+        /*
         DistLedgerCommonDefinitions.Operation operation = ledgerState.getLedger(0);
 
         DistLedgerCommonDefinitions.OperationType operationType = operation.getType();
@@ -84,7 +85,7 @@ public class ServerServiceImpl extends DistLedgerCrossServerServiceGrpc.DistLedg
             debug(e.getMessage(operation.getAmount()));
             responseObserver.onError(PERMISSION_DENIED.withDescription(e.getMessage(operation.getAmount())).asRuntimeException());
         }
-
+    */
     }
 
 }

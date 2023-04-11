@@ -21,6 +21,7 @@ public class ServerService {
     private final ManagedChannel namingChannel;
 
     private Map<String, DistLedgerCrossServerServiceGrpc.DistLedgerCrossServerServiceBlockingStub> stubCache;
+
     private Map<String, ManagedChannel> channelCache;
 
     private final NamingServerServiceGrpc.NamingServerServiceBlockingStub namingServerStub;
@@ -46,17 +47,16 @@ public class ServerService {
         this.namingChannel.shutdownNow();
     }
 
-    public String registerService(String service, String qualifier, String target) {
+    public void registerService(String service, String qualifier, String target) {
         RegisterRequest request = RegisterRequest.newBuilder()
                 .setServiceName(service)
                 .setQualifier(qualifier)
                 .setServerAddress(target)
                 .build();
         RegisterResponse response = namingServerStub.register(request);
-        return response.toString();
     }
 
-    public String deleteService(String service, String target) {
+    public void deleteService(String service, String target) {
         DeleteRequest request = DeleteRequest.newBuilder()
                 .setServiceName(service)
                 .setServerAddress(target)
@@ -70,7 +70,6 @@ public class ServerService {
 
         ManagedChannel channel = (ManagedChannel) namingServerStub.getChannel();
         channel.shutdownNow();
-        return response.toString();
     }
 
     public DistLedgerCrossServerServiceGrpc.DistLedgerCrossServerServiceBlockingStub lookupService(String service, String qualifier)
@@ -89,39 +88,40 @@ public class ServerService {
         }
     }
 
-    public boolean propagateStateService(Operation operation) {
+    public boolean propagateStateService(String destQualifier, List<Integer> replicaTS) {
         ManagedChannel serverChannel;
         DistLedgerCrossServerServiceGrpc.DistLedgerCrossServerServiceBlockingStub serverStub;
 
+        // TODO LEDGER STATE OBJECT MAYBE NOT WORKING STILL
+
         // Creating LedgerState object
         DistLedgerOperationVisitor visitor = new DistLedgerOperationVisitor();
-        operation.accept(visitor);
         List<DistLedgerCommonDefinitions.Operation> distLedgerOperations = visitor.getDistLedgerOperations();
         DistLedgerCommonDefinitions.LedgerState ledgerState = DistLedgerCommonDefinitions.LedgerState.newBuilder().addAllLedger(distLedgerOperations).build();
         CrossServerDistLedger.PropagateStateRequest request = CrossServerDistLedger.PropagateStateRequest.newBuilder()
-                .setState(ledgerState)
+                .setState(ledgerState).addAllReplicaTS(replicaTS)
                 .build();
 
         // Propagate the operation to every server found
         try {
-            serverStub = getStub("B");
+            serverStub = getStub(destQualifier);
             CrossServerDistLedger.PropagateStateResponse response = serverStub.propagateState(request);
         } catch (StatusRuntimeException e) {
             if (e.getStatus().getDescription().equals("UNAVAILABLE")) {
-                debug("Secondary server is unavailable");
+                debug("No other servers are available");
                 return false;
             }
             else if (e.getStatus().getCode() == Status.UNAVAILABLE.getCode()) {
-                debug("Secondary server either doesnt exist or port changed");
+                debug("other server either doesnt exist or port changed");
                 try {
-                    serverStub = lookupService("DistLedger", "B");
+                    serverStub = lookupService("DistLedger", destQualifier);
                     CrossServerDistLedger.PropagateStateResponse response = serverStub.propagateState(request);
                 } catch (NoServerAvailableException exp) {
                     return false;
                 }
             }
         } catch (NoServerAvailableException exp) {
-            debug("There's no secondary server");
+            debug("There's no other servers");
             return false;
         }
 

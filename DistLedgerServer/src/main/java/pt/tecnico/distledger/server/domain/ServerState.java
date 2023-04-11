@@ -5,6 +5,7 @@ import pt.tecnico.distledger.server.domain.operation.Operation;
 import pt.tecnico.distledger.server.domain.operation.TransferOp;
 import pt.tecnico.distledger.server.grpc.ServerService;
 import pt.tecnico.distledger.server.serverExceptions.*;
+import pt.ulisboa.tecnico.distledger.contract.DistLedgerCommonDefinitions;
 
 import java.util.*;
 
@@ -128,6 +129,18 @@ public class ServerState {
 
     public List<Operation> getLedgerState() { return ledger; }
 
+    public void gossip() {
+        String destQualifier = "A";
+        if (Objects.equals(this.qualifier, "A")) destQualifier = "B";
+        serverService.propagateStateService(destQualifier, this.replicaTS);
+    }
+
+    public void applyGossip(DistLedgerCommonDefinitions.LedgerState otherServerState, List<Integer> otherReplicaTS) {
+        // TODO - implement this!!
+        System.out.println(otherServerState);
+        System.out.println(otherReplicaTS);
+    }
+
     public List<Integer> getReplicaTS() {
         return replicaTS;
     }
@@ -156,4 +169,5 @@ public class ServerState {
     }
 
     private boolean isBroker(String userId) { return "broker".equals(userId); }
+
 }
