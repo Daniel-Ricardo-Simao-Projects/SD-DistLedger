@@ -44,11 +44,11 @@ public class ServerServiceImpl extends DistLedgerCrossServerServiceGrpc.DistLedg
         try {
             if (operationType.equals(DistLedgerCommonDefinitions.OperationType.OP_CREATE_ACCOUNT)) {
                 debug("Received create account request with username " + userId);
-                serverState.createAccount(userId, true);
+                serverState.createAccount(userId, true, request.getReplicaTSList());
             } else if (operationType.equals(DistLedgerCommonDefinitions.OperationType.OP_TRANSFER_TO)) {
                 debug("Received transfer request from user " + operation.getUserId() +
                         " to user " + operation.getDestUserId());
-                serverState.transferTo(operation.getUserId(), operation.getDestUserId(), operation.getAmount(), true);
+                serverState.transferTo(operation.getUserId(), operation.getDestUserId(), operation.getAmount(), true, request.getReplicaTSList());
             }
 
             CrossServerDistLedger.PropagateStateResponse response = CrossServerDistLedger.PropagateStateResponse.getDefaultInstance();
@@ -60,7 +60,7 @@ public class ServerServiceImpl extends DistLedgerCrossServerServiceGrpc.DistLedg
             debug(e.getMessage(userId));
             responseObserver.onError(ALREADY_EXISTS.withDescription(e.getMessage(userId)).asRuntimeException());
 
-        } catch (ServerUnavailableException | WriteNotSupportedException | CouldNotPropagateException e) {
+        } catch (ServerUnavailableException | CouldNotPropagateException e) {
             debug(e.getMessage());
             responseObserver.onError(UNAVAILABLE.withDescription(e.getMessage()).asRuntimeException());
 

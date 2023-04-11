@@ -40,21 +40,23 @@ public class ServerState {
     }
 
     public synchronized void createAccount(String userId, boolean isPropagation, List<Integer> prevTS) throws AccountAlreadyExistsException,
-            ServerUnavailableException, WriteNotSupportedException, CouldNotPropagateException {
-        if(qualifier.equals("B") && !isPropagation) {
+            ServerUnavailableException, CouldNotPropagateException {
+        // TODO Remove
+        /*if(qualifier.equals("B") && !isPropagation) {
             throw new WriteNotSupportedException();
-        }
+        }*/
 
         if (isInactive()) { throw new ServerUnavailableException(); }
 
         if (accounts.containsKey(userId)) { throw new AccountAlreadyExistsException(); }
 
         CreateOp createOp = new CreateOp(userId, prevTS, this.replicaTS);
-        if(qualifier.equals("A") && !isPropagation) {
+        // TODO Remove
+        /* if(qualifier.equals("A") && !isPropagation) {
             if (!serverService.propagateStateService(createOp)) {
                 throw new CouldNotPropagateException();
             }
-        }
+        }*/
 
 
         accounts.put(userId, 0);
@@ -75,11 +77,12 @@ public class ServerState {
 
     public synchronized void transferTo(String userId, String destAccount, int amount, boolean isPropagation, List<Integer> prevTS) throws
             ServerUnavailableException, DestAccountEqualToFromAccountException, AccountDoesntExistException,
-            DestAccountDoesntExistException, TransferBiggerThanBalanceException, WriteNotSupportedException,
+            DestAccountDoesntExistException, TransferBiggerThanBalanceException,
             CouldNotPropagateException, InvalidAmountException {
-        if(qualifier.equals("B") && !isPropagation) {
+        // TODO Remove
+        /*if(qualifier.equals("B") && !isPropagation) {
             throw new WriteNotSupportedException();
-        }
+        }*/
 
         if (isInactive()) { throw new ServerUnavailableException(); }
         if (userId.equals(destAccount)) { throw new DestAccountEqualToFromAccountException(); }
@@ -93,11 +96,12 @@ public class ServerState {
         if (senderBalance < amount) { throw new TransferBiggerThanBalanceException(); }
 
         TransferOp transferOp = new TransferOp(userId, destAccount, amount, prevTS, this.replicaTS);
-        if(qualifier.equals("A") && !isPropagation) {
+        // TODO Remove
+        /*if(qualifier.equals("A") && !isPropagation) {
             if(!serverService.propagateStateService(transferOp)) {
                 throw new CouldNotPropagateException();
             }
-        }
+        }*/
 
         accounts.put(userId, senderBalance - amount);
         accounts.put(destAccount, receiverBalance + amount);

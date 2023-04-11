@@ -180,7 +180,7 @@ public class UserService {
 
         UserDistLedger.CreateAccountResponse response = stub.createAccount(request);
         updatePrevTS(response.getTSList());
-        return "OK" + response.toString() + "\n";
+        return "OK\n" + response.toString() + "\n";
     }
 
     public String getBalanceRequest(UserServiceGrpc.UserServiceBlockingStub stub, String username) {
@@ -204,7 +204,7 @@ public class UserService {
 
         UserDistLedger.TransferToResponse response = stub.transferTo(request);
         updatePrevTS(response.getTSList());
-        return "OK" + response.toString() + "\n";
+        return "OK\n" + response.toString() + "\n";
     }
 
     public void updatePrevTS(List<Integer> TS) {

@@ -47,7 +47,7 @@ public class UserServiceImpl extends UserServiceGrpc.UserServiceImplBase {
             debug(e.getMessage(request.getUserId()));
             responseObserver.onError(ALREADY_EXISTS.withDescription(e.getMessage(request.getUserId())).asRuntimeException());
 
-        } catch (ServerUnavailableException | WriteNotSupportedException | CouldNotPropagateException e) {
+        } catch (ServerUnavailableException | CouldNotPropagateException e) {
             debug(e.getMessage());
             responseObserver.onError(UNAVAILABLE.withDescription(e.getMessage()).asRuntimeException());
         }
@@ -118,7 +118,7 @@ public class UserServiceImpl extends UserServiceGrpc.UserServiceImplBase {
             debug(e.getMessage(request.getAmount()));
             responseObserver.onError(PERMISSION_DENIED.withDescription(e.getMessage(request.getAmount())).asRuntimeException());
 
-        } catch (ServerUnavailableException | WriteNotSupportedException | CouldNotPropagateException e) {
+        } catch (ServerUnavailableException | CouldNotPropagateException e) {
             debug(e.getMessage());
             responseObserver.onError(UNAVAILABLE.withDescription(e.getMessage()).asRuntimeException());
         }
