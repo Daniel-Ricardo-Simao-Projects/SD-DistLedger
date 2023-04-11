@@ -50,7 +50,13 @@ public class ServerState {
 
         if (accounts.containsKey(userId)) { throw new AccountAlreadyExistsException(); }
 
+        incrementTS(replicaTS);
+
         CreateOp createOp = new CreateOp(userId, prevTS, this.replicaTS);
+        
+        if (isLessOrEqual(prevTS, valueTS)) {
+            incrementTS(valueTS);
+        }
         // TODO Remove
         /* if(qualifier.equals("A") && !isPropagation) {
             if (!serverService.propagateStateService(createOp)) {
@@ -95,7 +101,14 @@ public class ServerState {
         if (amount <= 0) { throw new InvalidAmountException(); }
         if (senderBalance < amount) { throw new TransferBiggerThanBalanceException(); }
 
+        incrementTS(replicaTS);
+
         TransferOp transferOp = new TransferOp(userId, destAccount, amount, prevTS, this.replicaTS);
+
+        if (isLessOrEqual(prevTS, valueTS)) {
+            incrementTS(valueTS);
+        }
+
         // TODO Remove
         /*if(qualifier.equals("A") && !isPropagation) {
             if(!serverService.propagateStateService(transferOp)) {
@@ -132,6 +145,14 @@ public class ServerState {
             }
         }
         return true;
+    }
+
+    private void incrementTS(List<Integer> TS) {
+        if (qualifier.charAt(0) == 'A') {
+            TS.set(0, TS.get(0) + 1);
+        } else {
+            TS.set(1, TS.get(1) + 1);
+        }
     }
 
     private boolean isBroker(String userId) { return "broker".equals(userId); }
