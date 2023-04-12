@@ -88,14 +88,17 @@ public class ServerService {
         }
     }
 
-    public boolean propagateStateService(String destQualifier, List<Integer> replicaTS) {
+    public boolean propagateStateService(List<Operation> ledger, String destQualifier, List<Integer> replicaTS) {
         ManagedChannel serverChannel;
         DistLedgerCrossServerServiceGrpc.DistLedgerCrossServerServiceBlockingStub serverStub;
 
-        // TODO LEDGER STATE OBJECT MAYBE NOT WORKING STILL
+        // TODO LEDGER STATE OBJECT MAYBE NOT WORKING STILL -- admin gossip gets stuck
 
         // Creating LedgerState object
         DistLedgerOperationVisitor visitor = new DistLedgerOperationVisitor();
+        for (Operation operation : ledger) {
+            operation.accept(visitor);
+        }
         List<DistLedgerCommonDefinitions.Operation> distLedgerOperations = visitor.getDistLedgerOperations();
         DistLedgerCommonDefinitions.LedgerState ledgerState = DistLedgerCommonDefinitions.LedgerState.newBuilder().addAllLedger(distLedgerOperations).build();
         CrossServerDistLedger.PropagateStateRequest request = CrossServerDistLedger.PropagateStateRequest.newBuilder()
@@ -127,7 +130,6 @@ public class ServerService {
 
         return true;
     }
-
 
     private DistLedgerCrossServerServiceGrpc.DistLedgerCrossServerServiceBlockingStub getStub(String serverQualifier) throws NoServerAvailableException {
         DistLedgerCrossServerServiceGrpc.DistLedgerCrossServerServiceBlockingStub stub = stubCache.get(serverQualifier);

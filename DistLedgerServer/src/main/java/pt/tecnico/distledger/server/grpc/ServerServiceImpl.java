@@ -2,11 +2,14 @@ package pt.tecnico.distledger.server.grpc;
 
 import io.grpc.stub.StreamObserver;
 import pt.tecnico.distledger.server.domain.ServerState;
+import pt.tecnico.distledger.server.domain.operation.DistLedgerOperationVisitor;
+import pt.tecnico.distledger.server.domain.operation.Operation;
 import pt.tecnico.distledger.server.serverExceptions.*;
 import pt.ulisboa.tecnico.distledger.contract.DistLedgerCommonDefinitions;
 import pt.ulisboa.tecnico.distledger.contract.distledgerserver.CrossServerDistLedger;
 import pt.ulisboa.tecnico.distledger.contract.distledgerserver.DistLedgerCrossServerServiceGrpc;
 
+import java.util.List;
 import java.util.logging.Logger;
 
 import static io.grpc.Status.*;

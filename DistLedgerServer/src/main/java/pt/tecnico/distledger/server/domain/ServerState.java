@@ -132,7 +132,7 @@ public class ServerState {
     public void gossip() {
         String destQualifier = "A";
         if (Objects.equals(this.qualifier, "A")) destQualifier = "B";
-        serverService.propagateStateService(destQualifier, this.replicaTS);
+        serverService.propagateStateService(this.ledger, destQualifier, this.replicaTS);
     }
 
     public void applyGossip(DistLedgerCommonDefinitions.LedgerState otherServerState, List<Integer> otherReplicaTS) {
