@@ -9,10 +9,13 @@ public class Operation {
 
     private final List<Integer> TS;
 
-    public Operation(String fromAccount, List<Integer> prevTS, List<Integer> TS) {
+    private boolean stable;
+
+    public Operation(String fromAccount, List<Integer> prevTS, List<Integer> TS, boolean stable) {
         this.account = fromAccount;
         this.prevTS = prevTS;
         this.TS = TS;
+        this.stable = stable;
     }
 
     public String getAccount() {
@@ -29,6 +32,14 @@ public class Operation {
 
     public List<Integer> getTS() {
         return TS;
+    }
+
+    public boolean isStable() {
+        return stable;
+    }
+
+    public void setStable(boolean stable) {
+        this.stable = stable;
     }
 
     public void accept(OperationVisitor visitor) {

@@ -1,6 +1,8 @@
 package pt.tecnico.distledger.server.grpc;
 
 import io.grpc.stub.StreamObserver;
+import pt.tecnico.distledger.server.domain.operation.CreateOp;
+import pt.tecnico.distledger.server.domain.operation.TransferOp;
 import pt.tecnico.distledger.server.serverExceptions.*;
 import pt.ulisboa.tecnico.distledger.contract.user.UserDistLedger;
 import pt.ulisboa.tecnico.distledger.contract.user.UserServiceGrpc;
@@ -33,7 +35,7 @@ public class UserServiceImpl extends UserServiceGrpc.UserServiceImplBase {
         debug("Received create account request with username " + request.getUserId());
 
         try {
-            serverState.createAccount(request.getUserId(), false, request.getPrevTSList());
+            CreateOp createOp = serverState.createAccount(request.getUserId(), request.getPrevTSList());
 
             UserDistLedger.CreateAccountResponse response = UserDistLedger.CreateAccountResponse.newBuilder()
                     .addAllTS(serverState.getReplicaTS())
@@ -43,11 +45,9 @@ public class UserServiceImpl extends UserServiceGrpc.UserServiceImplBase {
             responseObserver.onNext(response);
             responseObserver.onCompleted();
 
-        } catch (AccountAlreadyExistsException e) {
-            debug(e.getMessage(request.getUserId()));
-            responseObserver.onError(ALREADY_EXISTS.withDescription(e.getMessage(request.getUserId())).asRuntimeException());
+            serverState.checkCreateStability(createOp);
 
-        } catch (ServerUnavailableException | CouldNotPropagateException e) {
+        } catch (ServerUnavailableException e) {
             debug(e.getMessage());
             responseObserver.onError(UNAVAILABLE.withDescription(e.getMessage()).asRuntimeException());
         }
@@ -87,7 +87,7 @@ public class UserServiceImpl extends UserServiceGrpc.UserServiceImplBase {
                     " to user " + request.getAccountTo());
 
         try {
-            serverState.transferTo(request.getAccountFrom(), request.getAccountTo(), request.getAmount(), false, request.getPrevTSList());
+            TransferOp transferOp = serverState.transferTo(request.getAccountFrom(), request.getAccountTo(), request.getAmount(), request.getPrevTSList());
 
             UserDistLedger.TransferToResponse response = UserDistLedger.TransferToResponse.newBuilder()
                     .addAllTS(serverState.getReplicaTS())
@@ -98,27 +98,9 @@ public class UserServiceImpl extends UserServiceGrpc.UserServiceImplBase {
             responseObserver.onNext(response);
             responseObserver.onCompleted();
 
-        } catch (AccountDoesntExistException e) {
-            debug(e.getMessage(request.getAccountFrom()));
-            responseObserver.onError(NOT_FOUND.withDescription(e.getMessage(request.getAccountFrom())).asRuntimeException());
+            serverState.checkTransferStability(transferOp);
 
-        } catch (DestAccountEqualToFromAccountException e) {
-            debug(e.getMessage(request.getAccountFrom(), request.getAccountTo()));
-            responseObserver.onError(INVALID_ARGUMENT.withDescription(e.getMessage(request.getAccountFrom(), request.getAccountTo())).asRuntimeException());
-
-        } catch (DestAccountDoesntExistException e) {
-            debug(e.getMessage(request.getAccountTo()));
-            responseObserver.onError(NOT_FOUND.withDescription(e.getMessage(request.getAccountTo())).asRuntimeException());
-
-        } catch (InvalidAmountException e) {
-            debug(e.getMessage(request.getAmount()));
-            responseObserver.onError(INVALID_ARGUMENT.withDescription(e.getMessage(request.getAmount())).asRuntimeException());
-
-        } catch (TransferBiggerThanBalanceException e) {
-            debug(e.getMessage(request.getAmount()));
-            responseObserver.onError(PERMISSION_DENIED.withDescription(e.getMessage(request.getAmount())).asRuntimeException());
-
-        } catch (ServerUnavailableException | CouldNotPropagateException e) {
+        } catch (ServerUnavailableException e) {
             debug(e.getMessage());
             responseObserver.onError(UNAVAILABLE.withDescription(e.getMessage()).asRuntimeException());
         }

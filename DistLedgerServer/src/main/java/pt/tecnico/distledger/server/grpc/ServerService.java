@@ -97,7 +97,8 @@ public class ServerService {
         // Creating LedgerState object
         DistLedgerOperationVisitor visitor = new DistLedgerOperationVisitor();
         for (Operation operation : ledger) {
-            operation.accept(visitor);
+            if(operation.getTS().get(0) > replicaTS.get(0))
+                operation.accept(visitor);
         }
         List<DistLedgerCommonDefinitions.Operation> distLedgerOperations = visitor.getDistLedgerOperations();
         DistLedgerCommonDefinitions.LedgerState ledgerState = DistLedgerCommonDefinitions.LedgerState.newBuilder().addAllLedger(distLedgerOperations).build();

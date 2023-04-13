@@ -40,34 +40,37 @@ public class ServerState {
         this.serverService = serverService;
     }
 
-    public synchronized void createAccount(String userId, boolean isPropagation, List<Integer> prevTS) throws AccountAlreadyExistsException,
-            ServerUnavailableException, CouldNotPropagateException {
-        // TODO Remove
-        /*if(qualifier.equals("B") && !isPropagation) {
-            throw new WriteNotSupportedException();
-        }*/
-
+    public synchronized CreateOp createAccount(String userId, List<Integer> prevTS) throws
+            ServerUnavailableException {
+        
         if (isInactive()) { throw new ServerUnavailableException(); }
-
-        if (accounts.containsKey(userId)) { throw new AccountAlreadyExistsException(); }
 
         incrementTS(replicaTS);
 
-        CreateOp createOp = new CreateOp(userId, prevTS, this.replicaTS);
-        
+        CreateOp createOp = new CreateOp(userId, prevTS, this.replicaTS, false);
+
+        ledger.add(createOp);
+
+        return createOp;
+    }
+    
+    public synchronized void checkCreateStability(Operation createOp) {
+
+        String userId = createOp.getAccount();
+
+        List<Integer> prevTS = createOp.getPrevTS();
+
+        if (accounts.containsKey(userId)) {
+            ledger.remove(createOp);
+            return;
+        }
+
         if (isLessOrEqual(prevTS, valueTS)) {
             incrementTS(valueTS);
+            createOp.setStable(true);
+            accounts.put(userId, 0);
         }
-        // TODO Remove
-        /* if(qualifier.equals("A") && !isPropagation) {
-            if (!serverService.propagateStateService(createOp)) {
-                throw new CouldNotPropagateException();
-            }
-        }*/
 
-
-        accounts.put(userId, 0);
-        ledger.add(createOp);
     }
 
     public synchronized int getBalanceById(String userId, List<Integer> prevTS) throws AccountDoesntExistException, ServerUnavailableException, UserIsAheadOfServerException {
@@ -82,45 +85,45 @@ public class ServerState {
         return balance;
     }
 
-    public synchronized void transferTo(String userId, String destAccount, int amount, boolean isPropagation, List<Integer> prevTS) throws
-            ServerUnavailableException, DestAccountEqualToFromAccountException, AccountDoesntExistException,
-            DestAccountDoesntExistException, TransferBiggerThanBalanceException,
-            CouldNotPropagateException, InvalidAmountException {
-        // TODO Remove
-        /*if(qualifier.equals("B") && !isPropagation) {
-            throw new WriteNotSupportedException();
-        }*/
+    public synchronized TransferOp transferTo(String userId, String destAccount, int amount, List<Integer> prevTS) throws
+            ServerUnavailableException {
 
         if (isInactive()) { throw new ServerUnavailableException(); }
-        if (userId.equals(destAccount)) { throw new DestAccountEqualToFromAccountException(); }
+
+        incrementTS(replicaTS);
+
+        TransferOp transferOp = new TransferOp(userId, destAccount, amount, prevTS, this.replicaTS, false);
+
+        ledger.add(transferOp);
+
+        return transferOp;
+    }
+
+    public synchronized void checkTransferStability(TransferOp transferOp) {
+        String userId = transferOp.getAccount();
+        String destAccount = transferOp.getDestAccount();
+        int amount = transferOp.getAmount();
+        List<Integer> prevTS = transferOp.getPrevTS();
+
+        if (userId.equals(destAccount)) {
+            ledger.remove(transferOp);
+            return;
+        }
 
         Integer senderBalance = accounts.get(userId);
         Integer receiverBalance = accounts.get(destAccount);
 
-        if (senderBalance == null) { throw new AccountDoesntExistException(); }
-        if (receiverBalance == null) { throw new DestAccountDoesntExistException(); }
-        if (amount <= 0) { throw new InvalidAmountException(); }
-        if (senderBalance < amount) { throw new TransferBiggerThanBalanceException(); }
-
-        incrementTS(replicaTS);
-
-        TransferOp transferOp = new TransferOp(userId, destAccount, amount, prevTS, this.replicaTS);
+        if ((senderBalance == null) || (receiverBalance == null) || (amount <= 0) || (senderBalance < amount)) {
+            ledger.remove(transferOp);
+            return;
+        }
 
         if (isLessOrEqual(prevTS, valueTS)) {
             incrementTS(valueTS);
+            transferOp.setStable(true);
+            accounts.put(userId, senderBalance - amount);
+            accounts.put(destAccount, receiverBalance + amount);
         }
-
-        // TODO Remove
-        /*if(qualifier.equals("A") && !isPropagation) {
-            if(!serverService.propagateStateService(transferOp)) {
-                throw new CouldNotPropagateException();
-            }
-        }*/
-
-        accounts.put(userId, senderBalance - amount);
-        accounts.put(destAccount, receiverBalance + amount);
-
-        ledger.add(transferOp);
     }
 
     public void activateServer() { this.status = ACTIVE; }

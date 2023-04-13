@@ -4,8 +4,8 @@ import java.util.List;
 
 public class CreateOp extends Operation {
 
-    public CreateOp(String account, List<Integer> prevTS,List<Integer> TS) {
-        super(account, prevTS, TS);
+    public CreateOp(String account, List<Integer> prevTS,List<Integer> TS, boolean stable) {
+        super(account, prevTS, TS, stable);
     }
 
     @Override
