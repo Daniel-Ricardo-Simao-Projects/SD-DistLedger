@@ -17,6 +17,8 @@ public class DistLedgerOperationVisitor implements OperationVisitor {
         DistLedgerCommonDefinitions.Operation distLedgerOperation = DistLedgerCommonDefinitions.Operation.newBuilder()
                 .setType(DistLedgerCommonDefinitions.OperationType.OP_CREATE_ACCOUNT)
                 .setUserId(operation.getAccount())
+                .addAllPrevTS(operation.getPrevTS())
+                .addAllTS(operation.getTS())
                 .build();
         distLedgerOperations.add(distLedgerOperation);
     }
@@ -28,6 +30,8 @@ public class DistLedgerOperationVisitor implements OperationVisitor {
                 .setUserId(operation.getAccount())
                 .setDestUserId(operation.getDestAccount())
                 .setAmount(operation.getAmount())
+                .addAllPrevTS(operation.getPrevTS())
+                .addAllTS(operation.getTS())
                 .build();
         distLedgerOperations.add(distLedgerOperation);
     }

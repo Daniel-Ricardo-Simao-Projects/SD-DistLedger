@@ -35,7 +35,7 @@ public class UserServiceImpl extends UserServiceGrpc.UserServiceImplBase {
         debug("Received create account request with username " + request.getUserId());
 
         try {
-            CreateOp createOp = serverState.createAccount(request.getUserId(), request.getPrevTSList());
+            CreateOp createOp = serverState.createAccount(request.getUserId(), request.getPrevTSList(), false);
 
             UserDistLedger.CreateAccountResponse response = UserDistLedger.CreateAccountResponse.newBuilder()
                     .addAllTS(serverState.getReplicaTS())
@@ -45,7 +45,7 @@ public class UserServiceImpl extends UserServiceGrpc.UserServiceImplBase {
             responseObserver.onNext(response);
             responseObserver.onCompleted();
 
-            serverState.checkCreateStability(createOp);
+            serverState.checkCreateStability(createOp, false);
 
         } catch (ServerUnavailableException e) {
             debug(e.getMessage());
@@ -87,7 +87,7 @@ public class UserServiceImpl extends UserServiceGrpc.UserServiceImplBase {
                     " to user " + request.getAccountTo());
 
         try {
-            TransferOp transferOp = serverState.transferTo(request.getAccountFrom(), request.getAccountTo(), request.getAmount(), request.getPrevTSList());
+            TransferOp transferOp = serverState.transferTo(request.getAccountFrom(), request.getAccountTo(), request.getAmount(), request.getPrevTSList(), false);
 
             UserDistLedger.TransferToResponse response = UserDistLedger.TransferToResponse.newBuilder()
                     .addAllTS(serverState.getReplicaTS())
@@ -98,7 +98,7 @@ public class UserServiceImpl extends UserServiceGrpc.UserServiceImplBase {
             responseObserver.onNext(response);
             responseObserver.onCompleted();
 
-            serverState.checkTransferStability(transferOp);
+            serverState.checkTransferStability(transferOp, false);
 
         } catch (ServerUnavailableException e) {
             debug(e.getMessage());

@@ -88,20 +88,19 @@ public class ServerService {
         }
     }
 
-    public boolean propagateStateService(List<Operation> ledger, String destQualifier, List<Integer> replicaTS) {
+    public boolean propagateStateService(List<Operation> ledger, String destQualifier, List<Integer> replicaTS, List<Integer> otherReplicaTS) {
         ManagedChannel serverChannel;
         DistLedgerCrossServerServiceGrpc.DistLedgerCrossServerServiceBlockingStub serverStub;
-
-        // TODO LEDGER STATE OBJECT MAYBE NOT WORKING STILL -- admin gossip gets stuck
 
         // Creating LedgerState object
         DistLedgerOperationVisitor visitor = new DistLedgerOperationVisitor();
         for (Operation operation : ledger) {
-            if(operation.getTS().get(0) > replicaTS.get(0))
+            if(isLess(otherReplicaTS, operation.getTS()))
                 operation.accept(visitor);
         }
         List<DistLedgerCommonDefinitions.Operation> distLedgerOperations = visitor.getDistLedgerOperations();
         DistLedgerCommonDefinitions.LedgerState ledgerState = DistLedgerCommonDefinitions.LedgerState.newBuilder().addAllLedger(distLedgerOperations).build();
+
         CrossServerDistLedger.PropagateStateRequest request = CrossServerDistLedger.PropagateStateRequest.newBuilder()
                 .setState(ledgerState).addAllReplicaTS(replicaTS)
                 .build();
@@ -164,5 +163,19 @@ public class ServerService {
         channelCache.put(serverEntry.getQualifier(), newChannel);
 
         return newStub;
+    }
+
+    private boolean isLess(List<Integer> TS1, List<Integer> TS2) {
+        boolean var = false;
+
+        for (int i = 0; i < TS1.size(); i++) {
+            if (TS1.get(i) < TS2.get(i)) {
+                var = true;
+            }
+            else if(TS1.get(i) > TS2.get(i)) {
+                return false;
+            }
+        }
+        return var;
     }
 }

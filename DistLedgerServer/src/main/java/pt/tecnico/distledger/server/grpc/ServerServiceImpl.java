@@ -36,59 +36,10 @@ public class ServerServiceImpl extends DistLedgerCrossServerServiceGrpc.DistLedg
     public void propagateState(CrossServerDistLedger.PropagateStateRequest request,
                                StreamObserver<CrossServerDistLedger.PropagateStateResponse> responseObserver) {
 
-        serverState.applyGossip(request.getState(), request.getReplicaTSList());
-
-        /*
-        DistLedgerCommonDefinitions.Operation operation = ledgerState.getLedger(0);
-
-        DistLedgerCommonDefinitions.OperationType operationType = operation.getType();
-
-        String userId = operation.getUserId();
-
-        try {
-            if (operationType.equals(DistLedgerCommonDefinitions.OperationType.OP_CREATE_ACCOUNT)) {
-                debug("Received create account request with username " + userId);
-                serverState.createAccount(userId, true, request.getReplicaTSList());
-            } else if (operationType.equals(DistLedgerCommonDefinitions.OperationType.OP_TRANSFER_TO)) {
-                debug("Received transfer request from user " + operation.getUserId() +
-                        " to user " + operation.getDestUserId());
-                serverState.transferTo(operation.getUserId(), operation.getDestUserId(), operation.getAmount(), true, request.getReplicaTSList());
-            }
-
-            CrossServerDistLedger.PropagateStateResponse response = CrossServerDistLedger.PropagateStateResponse.getDefaultInstance();
-            debug("Sending response to primary server");
-            responseObserver.onNext(response);
-            responseObserver.onCompleted();
-
-        } catch (AccountAlreadyExistsException e) {
-            debug(e.getMessage(userId));
-            responseObserver.onError(ALREADY_EXISTS.withDescription(e.getMessage(userId)).asRuntimeException());
-
-        } catch (ServerUnavailableException | CouldNotPropagateException e) {
-            debug(e.getMessage());
-            responseObserver.onError(UNAVAILABLE.withDescription(e.getMessage()).asRuntimeException());
-
-        } catch (AccountDoesntExistException e) {
-            debug(e.getMessage(userId));
-            responseObserver.onError(NOT_FOUND.withDescription(e.getMessage(userId)).asRuntimeException());
-
-        } catch (DestAccountEqualToFromAccountException e) {
-            debug(e.getMessage(operation.getUserId(), operation.getDestUserId()));
-            responseObserver.onError(INVALID_ARGUMENT.withDescription(e.getMessage(operation.getDestUserId(), operation.getUserId())).asRuntimeException());
-
-        } catch (DestAccountDoesntExistException e) {
-            debug(e.getMessage(operation.getDestUserId()));
-            responseObserver.onError(NOT_FOUND.withDescription(e.getMessage(operation.getUserId())).asRuntimeException());
-
-        } catch (InvalidAmountException e) {
-            debug(e.getMessage(operation.getAmount()));
-            responseObserver.onError(INVALID_ARGUMENT.withDescription(e.getMessage(operation.getAmount())).asRuntimeException());
-
-        } catch (TransferBiggerThanBalanceException e) {
-            debug(e.getMessage(operation.getAmount()));
-            responseObserver.onError(PERMISSION_DENIED.withDescription(e.getMessage(operation.getAmount())).asRuntimeException());
-        }
-    */
+        serverState.applyGossip(request.getState().getLedgerList(), request.getReplicaTSList());
+        CrossServerDistLedger.PropagateStateResponse response = CrossServerDistLedger.PropagateStateResponse.getDefaultInstance();
+        responseObserver.onNext(response);
+        responseObserver.onCompleted();
     }
 
 }
