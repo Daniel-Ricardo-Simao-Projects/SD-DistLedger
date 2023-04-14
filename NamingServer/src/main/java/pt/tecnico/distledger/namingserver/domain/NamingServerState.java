@@ -35,7 +35,7 @@ public class NamingServerState {
         serviceEntry.addServerEntry(new ServerEntry(target, qualifier));
     }
 
-    public List<ServerEntry> lookup(String service, String qualifier) {
+    public synchronized List<ServerEntry> lookup(String service, String qualifier) {
         ServiceEntry serviceEntry = servicesMap.get(service);
         if (serviceEntry == null) return new HashSet<ServerEntry>().stream().toList();
         return serviceEntry.getServerEntries().stream()

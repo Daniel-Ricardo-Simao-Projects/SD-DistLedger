@@ -66,12 +66,14 @@ public class AdminServiceImpl extends AdminServiceGrpc.AdminServiceImplBase {
 
         debug("Received get ledger state request from admin");
 
-        List<Operation> operations = serverState.getLedgerState();
-
         DistLedgerOperationVisitor visitor = new DistLedgerOperationVisitor();
 
-        for (Operation operation : operations) {
-            operation.accept(visitor);
+        synchronized (this) {
+            List<Operation> operations = serverState.getLedgerState();
+
+            for (Operation operation : operations) {
+                operation.accept(visitor);
+            }
         }
 
         List<DistLedgerCommonDefinitions.Operation> distLedgerOperations = visitor.getDistLedgerOperations();
