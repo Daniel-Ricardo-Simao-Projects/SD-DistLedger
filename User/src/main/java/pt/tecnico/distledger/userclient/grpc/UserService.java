@@ -180,6 +180,7 @@ public class UserService {
 
         UserDistLedger.CreateAccountResponse response = stub.createAccount(request);
         updatePrevTS(response.getTSList());
+        debug("User prevTS " + prevTS);
         return "OK\n" + response.toString() + "\n";
     }
 
@@ -191,6 +192,7 @@ public class UserService {
 
         UserDistLedger.BalanceResponse response = stub.balance(request);
         updatePrevTS(response.getValueTSList());
+        debug("User prevTS " + prevTS);
         return "OK\n" + response.getValue() + "\n";
     }
 
@@ -204,6 +206,7 @@ public class UserService {
 
         UserDistLedger.TransferToResponse response = stub.transferTo(request);
         updatePrevTS(response.getTSList());
+        debug("User prevTS " + prevTS);
         return "OK\n" + response.toString() + "\n";
     }
 
